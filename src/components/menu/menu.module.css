@@ -1,3 +1,51 @@
 .container {
-    flex: 2;
+  flex: 2;
+  margin-top: 60px;
+}
+
+.subtitle {
+  color: gray;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.title {
+  font-size: 28px;
+}
+
+
+.travel {
+  background-color: #ff7857;
+}
+
+.food {
+  background-color: #ffb14f;
+}
+
+.coding {
+  background-color: #7fb881;
+}
+
+.other {
+  background-color: #ff7887;
+}
+
+.gardening {
+  background-color: aquamarine;
+}
+
+
+.categoryList{
+  margin-top: 35px;
+  margin-bottom: 60px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+
+}
+
+.categoryItem {
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-size: 14px;
 }
