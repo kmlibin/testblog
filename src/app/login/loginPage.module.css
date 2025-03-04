@@ -50,4 +50,10 @@
   .button:hover {
     background-color: #6366f1; /* hover:bg-indigo-500 */
   }
+
+  @media screen and (max-width: 768px) {
+    .wrapper {
+      width: 98%;
+    }
+  }
   
