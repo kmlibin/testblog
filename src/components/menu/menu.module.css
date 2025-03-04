@@ -49,3 +49,10 @@
   border-radius: 10px;
   font-size: 14px;
 }
+
+@media screen and (max-width: 1024px) {
+  .container{
+      display: none;
+  }
+
+}
