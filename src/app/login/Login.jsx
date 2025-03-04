@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 import { useRouter } from "next/navigation";
-// import { useAuth } from "@/context/AuthContext";
+
 
 import styles from "./loginPage.module.css";
 
@@ -14,46 +14,44 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-//   const { setUser, addAuthContext } = useAuth();
 
-//   const handleSignIn = async () => {
-//     setLoading(true);
-//     try {
-//       const res = await fetch("/api/login", {
-//         method: "POST",
-//         body: JSON.stringify({ email, password }),
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//       });
-//       if (res.status === 200) {
-//         const userData = { isAdmin: true };
-//         setUser && setUser(userData);
-//         addAuthContext();
-//         setLoading(false);
-//         router.push("/admin");
-//       } else {
-//         setLoading(false);
-//         setEmail("");
-//         setPassword("");
-//         setModalMessage(
-//           "Login failed. Please check credentials and try again."
-//         );
-//         setShowModal(true);
-//         console.log(res);
-//       }
-//     } catch (error) {
-//       setLoading(false);
-//       setModalMessage("Hmmm...something went wrong.");
-//       setShowModal(true);
-//       console.log(`error ${error}`);
-//     }
-//   };
 
-//   //closes error modal
-//   const closeModal = () => {
-//     setShowModal(false);
-//   };
+  const handleSignIn = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (res.status === 200) {
+        console.log('login worked')
+        setLoading(false);
+        router.push("/");
+      } else {
+        setLoading(false);
+        setEmail("");
+        setPassword("");
+        setModalMessage(
+          "Login failed. Please check credentials and try again."
+        );
+        setShowModal(true);
+        console.log(res);
+      }
+    } catch (error) {
+      setLoading(false);
+      setModalMessage("Hmmm...something went wrong.");
+      setShowModal(true);
+      console.log(`error ${error}`);
+    }
+  };
+
+  //closes error modal
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   return (
     <div className={styles.container}>
@@ -73,7 +71,7 @@ const Login = () => {
           onChange={(e) => setPassword(e.target.value)}
           className={styles.input}
         />
-        <button  className={styles.button}>
+        <button     onClick={handleSignIn} className={styles.button}>
           Sign In
         </button>
       </div>
