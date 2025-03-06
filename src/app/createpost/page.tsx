@@ -1,10 +1,11 @@
 import React from "react";
 import CreatePost from "./CreatePost";
 import { getCategories } from "../firebase/queries/sectionQueries";
+import { CategoryWithId } from "../types";
 
 async function page() {
-  let categories = null;
-  let error = null;
+  let categories: CategoryWithId[] | null = null;
+  let error: string | null = null;
 
   try {
     const categoriesInDB = await getCategories();
@@ -13,7 +14,6 @@ async function page() {
     }
   } catch (err) {
     error = "an error has occurred fetching categories";
-
   }
 
   return <CreatePost categories={categories} error={error} />;

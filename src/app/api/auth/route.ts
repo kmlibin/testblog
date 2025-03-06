@@ -1,6 +1,7 @@
 
 import { getAuth } from "firebase-admin/auth";
-import { initializeAdminApp } from "../../firebase/firebaseAdmin";
+import { NextRequest, NextResponse } from "next/server";
+import { initializeAdminApp } from "../../firebase/firebaseAdmin.js";
 
 //this function authorizes a user to view certain pages based on firebase admin. on login, i set a token for that user and custom claims for that user
 //custcom claims are stored by their uid. token stored as a cookie, connects their session to their user profile. i get the cookie,
@@ -8,7 +9,7 @@ import { initializeAdminApp } from "../../firebase/firebaseAdmin";
 //i return true or false, which sends back to server action as 200 or 403
 
 //seems like whenver there is any error from firebase, it just defaults to the catch block, bypassing my errors.  hmm.
-export async function GET(req, res) {
+export async function GET(req: NextRequest, res: NextResponse) {
   initializeAdminApp();
 
   const token = req.headers.getSetCookie();
@@ -35,7 +36,7 @@ export async function GET(req, res) {
         );
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     //same as in login function, fb just throws an error and it goes immediately to the catch block, so that's why i'm handling
     //different cases here
     if (error.code === "auth/argument-error") {

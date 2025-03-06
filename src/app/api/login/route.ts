@@ -14,7 +14,7 @@ import { getDoc, doc } from "firebase/firestore/lite";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export async function POST(req, res) {
+export async function POST(req: NextRequest, res: NextResponse) {
   console.log('hit login route')
   //need to use firebase admin
 
@@ -58,7 +58,7 @@ export async function POST(req, res) {
       }
     } 
 
-  } catch (err) {
+  } catch (err: any) {
     if(err.code === "auth/invalid-credential") {
       //I'd had this error a few ways in the try block, but the error firebase throws goes right to the catch block. i saved signinwithemail/pass to a variable,
       //but i couldn't even console log the variable if the request wasn't successful, it just immediately threw an error. So, that's why I'm

@@ -2,31 +2,36 @@
 import React, { useState } from "react";
 import styles from "./createPost.module.css";
 
-  import { useEffect } from "react";
+
 import "react-quill/dist/quill.bubble.css";
 import ReactQuill from "react-quill";
 import { createBlogPost } from "../actions/posts";
 import AddImage from "./AddImage";
 import { uploadImage } from "../utils/uploadImage";
+import { CategoryWithId, BlogPost } from "../types";
+
+type CreatePostProps = {
+  categories: CategoryWithId[] | null;
+  error: string | null;
+}
+
+type ImageFile = {
+  url: string;
+  file: File;
+};
 
 
-const createPost = ({ categories, error }) => {
+const createPost = ({ categories, error }: CreatePostProps) => {
+  const [value, setValue] = useState<string>("");
+  const [coverImage, setCoverImage] = useState<ImageFile | null>(null);
+  const [additionalImages, setAdditionalImages] = useState<ImageFile[]>([]);
+  const [title, setTitle] = useState<string>("");
+  const [catSlug, setCatSlug] = useState<string>("");
 
-  const [value, setValue] = useState("");
-  const [coverImage, setCoverImage] = useState(null);
-  const [additionalImages, setAdditionalImages] = useState([]);
-  const [title, setTitle] = useState("");
-  const [catSlug, setCatSlug] = useState("");
 
-
-useEffect(() => {
-  if (coverImage) {
-    console.log(coverImage.file);  // This will log when coverImage state is updated
-  }
-}, [coverImage]);
-
-  const handleCoverImageUpload = (e) => {
-    const file = e.target.files[0];
+  const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if(!file) return;
     setCoverImage({
       url: URL.createObjectURL(file),
       file: file,
@@ -34,26 +39,26 @@ useEffect(() => {
 
   };
 
-  const handleAdditionalImageUpload = (e) => {
-    const files = Array.from(e.target.files);
+  const handleAdditionalImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
     setAdditionalImages((prevImages) => [
       ...prevImages,
       ...files.map((file) => ({ url: URL.createObjectURL(file), file })),
     ]);
   };
 
-  function generateSlug(title) {
+  function generateSlug(title: string) {
     return title
       .toLowerCase()
       .replace(/ /g, "-")
       .replace(/[^\w-]+/g, "");
   }
 
-  const handlePublish = async (e) => {
+  const handlePublish = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
     try {
         const imageUrlsAndPaths = await Promise.all(additionalImages.map((image) =>uploadImage(image.file)))
-        const coverUrlAndPath = await uploadImage(coverImage.file)
+        const coverUrlAndPath = await uploadImage(coverImage?.file)
  
     const post = {
       category: catSlug,

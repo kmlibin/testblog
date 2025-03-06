@@ -1,7 +1,12 @@
 "use client";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, ReactNode } from "react";
 
-export const ThemeContext = createContext();
+interface ThemeContextType {
+  theme: string;
+  toggle: () => void;
+}
+
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 //store key/value in local storage
 const getFromLocalStorage = () => {
@@ -10,10 +15,15 @@ const getFromLocalStorage = () => {
     const value = localStorage.getItem("theme");
     return value || "light";
   }
+  return "light"
 };
 
-export const ThemeContextProvider = ({ children }) => {
-  const [theme, setTheme] = useState(() => {
+interface ThemeContextProviderProps {
+  children: ReactNode;
+}
+
+export const ThemeContextProvider = ({ children }: ThemeContextProviderProps) => {
+  const [theme, setTheme] = useState<string>(() => {
     return getFromLocalStorage();
   });
 

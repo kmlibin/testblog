@@ -4,10 +4,33 @@ import styles from "./addimages.module.css";
 import Image from "next/image";
 import "react-quill/dist/quill.bubble.css";
 
-const AddImage = ({coverImage, setCoverImage, additionalImages, setAdditionalImages, handleAdditionalImageUpload, handleCoverImageUpload}) => {
-    const removeImage = (index) => {
-        setAdditionalImages((prevImages) => prevImages.filter((_, i) => i !== index));
-      };
+type ImageFile = {
+  url: string;
+  file: File;
+};
+
+type AddImageProps = {
+  coverImage: ImageFile | null;
+  setCoverImage: React.Dispatch<React.SetStateAction<ImageFile | null>>;
+  additionalImages: ImageFile[];
+  setAdditionalImages: React.Dispatch<React.SetStateAction<ImageFile[]>>;
+  handleAdditionalImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleCoverImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+};
+
+const AddImage = ({
+  coverImage,
+  setCoverImage,
+  additionalImages,
+  setAdditionalImages,
+  handleAdditionalImageUpload,
+  handleCoverImageUpload,
+}: AddImageProps) => {
+  const removeImage = (index: number) => {
+    setAdditionalImages((prevImages) =>
+      prevImages.filter((_, i) => i !== index)
+    );
+  };
 
   return (
     <div className={styles.allImagesContainer}>
@@ -16,9 +39,12 @@ const AddImage = ({coverImage, setCoverImage, additionalImages, setAdditionalIma
           <div className={styles.placeholderContainer}>
             <div className={styles.buttonContainer}>
               <button
-                onClick={() =>
-                  document.getElementById("coverImageUpload").click()
-                }
+                 onClick={() => {
+                  const inputElement = document.getElementById("coverImageUpload") as HTMLInputElement | null;
+                  if (inputElement) {
+                    inputElement.click();
+                  }
+                }}
                 className={styles.addButton}
               >
                 <Image
