@@ -1,66 +1,94 @@
 "use client";
 import React, { useState } from "react";
 import styles from "./createPost.module.css";
-import Image from "next/image";
+
+  import { useEffect } from "react";
 import "react-quill/dist/quill.bubble.css";
 import ReactQuill from "react-quill";
 import { createBlogPost } from "../actions/posts";
+import AddImage from "./AddImage";
+import { uploadImage } from "../utils/uploadImage";
+
 
 const createPost = ({ categories, error }) => {
-  const [open, setOpen] = useState(false);
+
   const [value, setValue] = useState("");
-  const [file, setFile] = useState(null);
+  const [coverImage, setCoverImage] = useState(null);
+  const [additionalImages, setAdditionalImages] = useState([]);
   const [title, setTitle] = useState("");
   const [catSlug, setCatSlug] = useState("");
 
-  console.log(categories);
+
+useEffect(() => {
+  if (coverImage) {
+    console.log(coverImage.file);  // This will log when coverImage state is updated
+  }
+}, [coverImage]);
+
+  const handleCoverImageUpload = (e) => {
+    const file = e.target.files[0];
+    setCoverImage({
+      url: URL.createObjectURL(file),
+      file: file,
+    });
+
+  };
+
+  const handleAdditionalImageUpload = (e) => {
+    const files = Array.from(e.target.files);
+    setAdditionalImages((prevImages) => [
+      ...prevImages,
+      ...files.map((file) => ({ url: URL.createObjectURL(file), file })),
+    ]);
+  };
 
   function generateSlug(title) {
     return title
       .toLowerCase()
-      .replace(/ /g, '-') 
-      .replace(/[^\w-]+/g, ''); 
+      .replace(/ /g, "-")
+      .replace(/[^\w-]+/g, "");
   }
 
-  const handlePublish = async () => {
-    // Prepare the post object
+  const handlePublish = async (e) => {
+    e.preventDefault()
+    try {
+        const imageUrlsAndPaths = await Promise.all(additionalImages.map((image) =>uploadImage(image.file)))
+        const coverUrlAndPath = await uploadImage(coverImage.file)
+ 
     const post = {
-        // category: doc(db, "categories", catSlug),
-    //   images: images.map(image => ({
-    //     path: image.path, // Image file path
-    //     url: image.url,   // Image URL
-    //   })),
-      draft: true, // Draft status (true or false)
-      date: new Date(),  // Current timestamp
-      title: title,  // Post title from the input
-    //   coverImage: {
-    //     path: coverImagePath, // Cover image path
-    //     url: coverImageUrl,   // Cover image URL
-    //   },
+      category: catSlug,
+      draft: false, // Draft status (true or false)
+      date: new Date(), // Current timestamp
+      title: title, // Post title from the input
+      coverImage: coverUrlAndPath,
+      additionalImages: imageUrlsAndPaths,
       content: value, // Content from React Quill editor
       slug: generateSlug(title), // Generate slug based on title
-    //   tags: tagsArray, // Tags from the input field
-      views: 0,  // Starting views count
+      tags: ["test", "of", "keywords"],
+      views: 0, // Starting views count
     };
-  
-    try {
+
+
       // Call server action to create post
-      const response = await createBlogPost(post); 
-      console.log('Post created successfully:', response);
+      const response = await createBlogPost(post);
+      console.log("Post created successfully:", response);
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error("Error creating post:", error);
     }
   };
 
-  console.log(catSlug, title, value);
+  console.log(catSlug, title, value, coverImage, additionalImages);
   return (
     <div className={styles.container}>
+      {/* //title */}
       <input
         type="text"
         placeholder="Title"
         className={styles.input}
         onChange={(e) => setTitle(e.target.value)}
       />
+
+      {/* //categories */}
       {error && <div className={styles.error}>Error fetching sections...</div>}
       {categories !== null && (
         <select
@@ -75,31 +103,17 @@ const createPost = ({ categories, error }) => {
           ))}
         </select>
       )}
+      {/* Photo Uploads */}
+      <AddImage
+        handleCoverImageUpload={handleCoverImageUpload}
+        handleAdditionalImageUpload={handleAdditionalImageUpload}
+        coverImage={coverImage}
+        setCoverImage={setCoverImage}
+        additionalImages={additionalImages}
+        setAdditionalImages={setAdditionalImages}
+      />
+
       <div className={styles.editor}>
-        <button className={styles.button} onClick={() => setOpen(!open)}>
-          <Image src="/plus.png" alt="" width={16} height={16} />
-        </button>
-        {open && (
-          <div className={styles.add}>
-            <input
-              type="file"
-              id="image"
-              onChange={(e) => setFile(e.target.files[0])}
-              style={{ display: "none" }}
-            />
-            <button className={styles.addButton}>
-              <label htmlFor="image">
-                <Image src="/image.png" alt="" width={16} height={16} />
-              </label>
-            </button>
-            <button className={styles.addButton}>
-              <Image src="/external.png" alt="" width={16} height={16} />
-            </button>
-            <button className={styles.addButton}>
-              <Image src="/video.png" alt="" width={16} height={16} />
-            </button>
-          </div>
-        )}
         <ReactQuill
           className={styles.textArea}
           theme="bubble"
