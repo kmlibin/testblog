@@ -15,7 +15,7 @@ export async function getCategories() {
   try {
     const collectionSnapshot = await getDocs(collection(db, "categories"));
     if (collectionSnapshot.empty) {
-      throw new Error("Categories collection is empty");
+      return "Error Fetching Categories"
     }
     if (collectionSnapshot) {
       const categories: CategoryWithId[] = collectionSnapshot.docs.map(
@@ -33,7 +33,7 @@ export async function getCategories() {
 
       return categories;
     }
-  } catch (error) {
-    throw new Error("error fetching categories");
+  } catch (error: any) {
+    return error.message;
   }
 }

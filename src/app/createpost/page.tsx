@@ -8,9 +8,14 @@ async function page() {
   let error: string | null = null;
 
   try {
-    const categoriesInDB = await getCategories();
-    if (Array.isArray(categoriesInDB) && categoriesInDB.length > 1) {
-      categories = categoriesInDB;
+    categories = await getCategories();
+    if (categories && typeof categories === "string") {
+      error = categories;
+      categories = null;
+    }
+    if (categories && categories.length < 1) {
+      error = "An error occurred while fetching categories";
+      categories = null;
     }
   } catch (err) {
     error = "an error has occurred fetching categories";
