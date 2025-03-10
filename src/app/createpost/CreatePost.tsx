@@ -1,16 +1,19 @@
 "use client";
 import React, { useState } from "react";
 import styles from "./createPost.module.css";
+import { useRouter } from "next/navigation";
 
 import "react-quill/dist/quill.bubble.css";
 import ReactQuill from "react-quill";
 import { createBlogPost } from "../actions/posts";
 import AddImage from "./AddImage";
 import { uploadImage } from "../utils/uploadImage";
-import { CategoryWithId, BlogPost } from "../types";
+import { CategoryWithId } from "../types";
 import Keywords from "./Keywords";
 import { MdUpload } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
+import Modal from "@/components/modal/Modal";
+import Loading from "@/components/loading/Loading";
 
 type CreatePostProps = {
   categories: CategoryWithId[] | null;
@@ -23,6 +26,9 @@ type ImageFile = {
 };
 
 const createPost = ({ categories, error }: CreatePostProps) => {
+  const router = useRouter();
+
+  const [showCategoryErrorModal, setShowCategoryErrorModal] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
@@ -34,27 +40,46 @@ const createPost = ({ categories, error }: CreatePostProps) => {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [draft, setDraft] = useState<boolean>(false);
+  const [newPostId, setNewPostId] = useState<string | null>(null);
 
+  const MAX_FILE_SIZE = 3 * 1024 * 1024;
 
   //upload for the cover photo
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
-    setCoverImage({
-      url: URL.createObjectURL(file),
-      file: file,
-    });
+
+    if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        alert("File is too large. Please upload an image smaller than 3MB.");
+      }
+    } else {
+      setCoverImage({
+        url: URL.createObjectURL(file),
+        file: file,
+      });
+    }
   };
 
   //uploads for array of images
   const handleAdditionalImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     const files = e.target.files ? Array.from(e.target.files) : [];
-    setAdditionalImages((prevImages) => [
-      ...prevImages,
-      ...files.map((file) => ({ url: URL.createObjectURL(file), file })),
-    ]);
+
+    files.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        alert("File is too large. Please upload an image smaller than 3MB.");
+      } else {
+        const url = URL.createObjectURL(file);
+        setAdditionalImages((prevImages) => [...prevImages, { url, file }]);
+      }
+    });
   };
 
   //creates the slug
@@ -91,17 +116,28 @@ const createPost = ({ categories, error }: CreatePostProps) => {
       };
 
       //call server action, create post
-      const { error, message } = await createBlogPost(post);
+      const response = await createBlogPost(post);
       //if successful
-      if (error === false) {
+      if (response.error === false) {
+        const { message, error, id } = response;
         setLoading(false);
         setSuccess(true);
         setModalMessage(message);
         setShowModal(true);
+        setNewPostId(id);
+
+        //clear state values
+        setTitle("");
+        setContent("");
+        setCoverImage(null);
+        setAdditionalImages([]);
+        setKeywords([]);
+        setDraft(false);
         console.log("success!");
       }
       //if unsuccessful
-      if (error === true) {
+      if (response.error === true) {
+        const { message } = response;
         setLoading(false);
         setSuccess(false);
         setModalMessage(message);
@@ -117,9 +153,17 @@ const createPost = ({ categories, error }: CreatePostProps) => {
     }
   };
 
+  const closeModal = () => {
+    setShowModal(false);
+    if (success == true) {
+      router.push("/");
+    }
+  };
+
   console.log(catSlug, title, content, coverImage, additionalImages, keywords);
   return (
     <div className={styles.container}>
+      <Loading label="Adding blog to database..." isLoading={loading} />
       <form onSubmit={handlePublish} className={styles.form}>
         {/* //title */}
         <input
@@ -127,6 +171,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
           placeholder="Title"
           className={styles.input}
           onChange={(e) => setTitle(e.target.value)}
+          required
         />
 
         {/* //categories */}
@@ -135,6 +180,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
         )}
         {categories !== null && (
           <select
+            required
             className={styles.select}
             onChange={(e) => setCatSlug(e.target.value)}
           >
@@ -167,16 +213,31 @@ const createPost = ({ categories, error }: CreatePostProps) => {
         </div>
         <Keywords keywords={keywords} setKeywords={setKeywords} />
         <div className={styles.buttons}>
-          <button className={styles.publish}>
+          <button type="submit" className={styles.publish} disabled={loading}>
             Publish
             <MdUpload />
           </button>
-          <button onClick={() => setDraft(true)} className={styles.draft}>
+          <button
+            type="submit"
+            disabled={loading}
+            onClick={() => setDraft(true)}
+            className={styles.draft}
+          >
             Save as Draft
             <FaRegSave />
           </button>
         </div>
       </form>
+      <Modal show={showModal} onClose={closeModal}>
+        <div>
+          <p>{modalMessage}</p>
+        </div>
+      </Modal>
+      {/* <Modal show={showCategoryErrorModal} onClose={closeCategoryModal}>
+        <div>
+          <p>{addCategoryError}</p>
+        </div>
+      </Modal> */}
     </div>
   );
 };
