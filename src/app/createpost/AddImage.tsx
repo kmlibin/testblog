@@ -26,12 +26,35 @@ const AddImage = ({
   handleAdditionalImageUpload,
   handleCoverImageUpload,
 }: AddImageProps) => {
+
+
+
+
   const removeImage = (index: number) => {
     setAdditionalImages((prevImages) =>
       prevImages.filter((_, i) => i !== index)
     );
   };
 
+    const handleAdditionalImageClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();  // Stop the click event from propagating to the form
+      const inputElement = document.getElementById("additionalImagesUpload") as HTMLInputElement | null;
+      if (inputElement) {
+        inputElement.click();
+      }
+    };
+
+    const handleCoverImageClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputElement = document.getElementById(
+        "coverImageUpload"
+      ) as HTMLInputElement | null;
+      if (inputElement) {
+        inputElement.click();
+      }
+    }
   return (
     <div className={styles.allImagesContainer}>
       <div className={styles.coverPhotoContainer}>
@@ -55,14 +78,7 @@ const AddImage = ({
             </div>
             <div className={styles.buttonContainer}>
               <button
-                onClick={() => {
-                  const inputElement = document.getElementById(
-                    "coverImageUpload"
-                  ) as HTMLInputElement | null;
-                  if (inputElement) {
-                    inputElement.click();
-                  }
-                }}
+                onClick={handleCoverImageClick}
                 className={styles.addButton}
               >
                 <Image
@@ -146,14 +162,7 @@ const AddImage = ({
           <div className={styles.buttonContainer}>
             <button
               className={styles.addButton}
-              onClick={() => {
-                const inputElement = document.getElementById(
-                  "additionalImagesUpload"
-                ) as HTMLInputElement | null;
-                if (inputElement) {
-                  inputElement.click();
-                }
-              }}
+              onClick={handleAdditionalImageClick}
             >
               <Image src="/plus.png" alt="Add Image" width={24} height={24} />
             </button>
