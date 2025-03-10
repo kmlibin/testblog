@@ -4,6 +4,10 @@
   flex-direction: column;
 }
 
+.form {
+  display: flex;
+  flex-direction: column;
+}
 .select {
   margin-bottom: 50px;
   padding: 10px 20px;
@@ -71,15 +75,22 @@
   margin-top: 3rem;
 }
 
-.publish {
-  position: absolute;
-  top: 0px;
-  right: 0px;
+.buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.publish,
+.draft {
   padding: 10px 20px;
   border: none;
   background-color: #1a8917;
   color: white;
   cursor: pointer;
   border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
 }
-
