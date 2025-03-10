@@ -5,23 +5,17 @@ import { CategoryWithId } from "../types";
 
 async function page() {
   let categories: CategoryWithId[] | null = null;
-  let error: string | null = null;
+  let categoriesError: string | null = null;
 
-  try {
-    categories = await getCategories();
-    if (categories && typeof categories === "string") {
-      error = categories;
-      categories = null;
-    }
-    if (categories && categories.length < 1) {
-      error = "An error occurred while fetching categories";
-      categories = null;
-    }
-  } catch (err) {
-    error = "an error has occurred fetching categories";
-  }
+   const categoryResult = await getCategories();
+   if (categoryResult.error) {
+     categoriesError = categoryResult.error;
+   } else {
+     categories = categoryResult.categories;
+   }
 
-  return <CreatePost categories={categories} error={error} />;
+
+  return <CreatePost categories={categories} error={categoriesError} />;
 }
 
 export default page;

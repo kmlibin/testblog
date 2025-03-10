@@ -11,29 +11,26 @@ import { db, storage } from "../config";
 import { ref, deleteObject } from "firebase/storage";
 import { CategoryWithId } from "@/app/types";
 
-export async function getCategories() {
+type CategoryResult = { categories: CategoryWithId[] | null; error: string | null };
+
+export async function getCategories(): Promise<CategoryResult> {
   try {
     const collectionSnapshot = await getDocs(collection(db, "categories"));
     if (collectionSnapshot.empty) {
-      return "Error Fetching Categories"
+      return { error: "error fetching categories", categories: null };
     }
     if (collectionSnapshot) {
       const categories: CategoryWithId[] = collectionSnapshot.docs.map(
         (doc) => {
           const data = doc.data();
-          return {
-            id: doc.id,
-            name: data.name,
-            color: data.color,
-            image: data.image,
-            posts: data.posts,
-          };
+          return { id: doc.id, name: data.name, color: data.color, image: data.image, posts: data.posts };
         }
       );
 
-      return categories;
+      return { error: null, categories };
     }
+    return {error: "Error fetching categories", categories: null}
   } catch (error: any) {
-    return error.message;
+    return { error: error.message, categories: null };
   }
 }
