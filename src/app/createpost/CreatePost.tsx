@@ -185,7 +185,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
             onChange={(e) => setCatSlug(e.target.value)}
           >
             <option value="">Select a category</option>
-            {categories.map((category) => (
+            {categories?.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
