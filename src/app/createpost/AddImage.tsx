@@ -37,25 +37,6 @@ const AddImage = ({
       <div className={styles.coverPhotoContainer}>
         {!coverImage ? (
           <div className={styles.placeholderContainer}>
-            <div className={styles.buttonContainer}>
-              <button
-                 onClick={() => {
-                  const inputElement = document.getElementById("coverImageUpload") as HTMLInputElement | null;
-                  if (inputElement) {
-                    inputElement.click();
-                  }
-                }}
-                className={styles.addButton}
-              >
-                <Image
-                  src="/plus.png"
-                  alt="Add Cover Photo"
-                  width={24}
-                  height={24}
-                />
-              </button>
-              <span>Add Cover Image</span>
-            </div>
             <input
               type="file"
               id="coverImageUpload"
@@ -71,6 +52,27 @@ const AddImage = ({
                 width={350}
                 height={200}
               />
+            </div>
+            <div className={styles.buttonContainer}>
+              <button
+                onClick={() => {
+                  const inputElement = document.getElementById(
+                    "coverImageUpload"
+                  ) as HTMLInputElement | null;
+                  if (inputElement) {
+                    inputElement.click();
+                  }
+                }}
+                className={styles.addButton}
+              >
+                <Image
+                  src="/plus.png"
+                  alt="Add Cover Photo"
+                  width={24}
+                  height={24}
+                />
+              </button>
+              <span>Add Cover Image</span>
             </div>
           </div>
         ) : (
@@ -103,7 +105,7 @@ const AddImage = ({
               [...Array(3)].map((_, index) => (
                 <div key={index} className={styles.thumbnailContainer}>
                   <Image
-                    src="/additionalimages.svg"
+                    src="/images.svg"
                     alt={`Placeholder ${index + 1}`}
                     width={200}
                     height={150}
@@ -142,10 +144,18 @@ const AddImage = ({
         />
         {additionalImages.length < 3 && (
           <div className={styles.buttonContainer}>
-            <button className={styles.addButton}>
-              <label htmlFor="additionalImagesUpload">
-                <Image src="/plus.png" alt="Add Image" width={24} height={24} />
-              </label>
+            <button
+              className={styles.addButton}
+              onClick={() => {
+                const inputElement = document.getElementById(
+                  "additionalImagesUpload"
+                ) as HTMLInputElement | null;
+                if (inputElement) {
+                  inputElement.click();
+                }
+              }}
+            >
+              <Image src="/plus.png" alt="Add Image" width={24} height={24} />
             </button>
             <span>Add Additional Images</span>
           </div>

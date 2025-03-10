@@ -16,6 +16,7 @@
     justify-content: start;
     align-items: center;
     gap: 10px;
+    cursor: pointer;
 
 }
 
@@ -56,6 +57,7 @@
     flex-wrap: wrap;
     gap: 10px;
     width: 100%;
+
 }
 .imageThumbnails{
     display: flex;
