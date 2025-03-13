@@ -44,7 +44,7 @@ export async function getBlogPostById(id: string): Promise<BlogPostResult> {
       return {
         data: {
           id: postSnapshot.id,
-          data: { ...postData, category: categoryName },
+          data: { ...postData, category: postData.category, categoryName: categoryName },
         },
         error: null,
       };
