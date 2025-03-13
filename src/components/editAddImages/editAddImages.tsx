@@ -35,13 +35,16 @@ const EditAddImage = ({
     const [numOfImages, setNumOfImages] = useState<number>(0);
     const [useURLForCoverImage, setUseURLForCoverImage] = useState<string>("");
     
-
+console.log(coverImage, firebaseCoverImage)
     useEffect(() => {
-        setUseURLForCoverImage(determineURL());
-      }, [firebaseCoverImage, coverImage]);
+      const url = determineURL()
+      if (url) {
+        setUseURLForCoverImage(url);
+      }
+      }, [coverImage, firebaseCoverImage]);
 
     const determineURL = () => {
-        if (firebaseCoverImage) return firebaseCoverImage.url;
+        if (firebaseCoverImage && firebaseCoverImage.url !== "") return firebaseCoverImage.url;
         if (coverImage) return coverImage.url;
         return ""; 
       };
@@ -69,7 +72,7 @@ const EditAddImage = ({
         }
       };
 
-      const removeCoverImage = (url: string, path?: string) => {
+      const removeCoverImage = ( url: string, path?: string) => {
         const isFirebaseUrl = url.includes("firebase")
         if (isFirebaseUrl) {
             const imageRef = ref(storage, path);
@@ -147,9 +150,8 @@ const EditAddImage = ({
         <div className={styles.coverPhoto}>
           <div className={styles.imageContainer}>
             <Image
-              src={useURLForCoverImage || '/image'}
+               src={useURLForCoverImage && useURLForCoverImage !== "" ? useURLForCoverImage : "/images.svg"}
               alt="image"
-              layout="intrinsic"
               width={400}
               height={300}
               className={styles.image}
