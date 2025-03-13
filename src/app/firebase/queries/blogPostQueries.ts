@@ -11,7 +11,9 @@ import {
   count,
   getCount,
   startAt,
+  Timestamp
 } from "firebase/firestore/lite";
+
 
 import { db } from "@/app/firebase/config";
 import { BlogPost, Category } from "@/app/types";
@@ -30,6 +32,18 @@ export async function getBlogPostById(id: string): Promise<BlogPostResult> {
     if (postSnapshot) {
       const postData = postSnapshot.data() as BlogPost;
 
+        // convert Firestore timestamps to plain JavaScript Date or string
+        const formattedPostData = {
+          ...postData,
+          date:
+            postData.date instanceof Timestamp
+              ? postData.date.toDate().toISOString()
+              : null,
+          editedAt:
+            postData.editedAt instanceof Timestamp
+              ? postData.editedAt.toDate().toISOString()
+              : null,
+        };
       //fetch category name, since category is saved as an id in the blogpost
       let categoryName = "Other";
       if (postData.category) {
@@ -44,7 +58,7 @@ export async function getBlogPostById(id: string): Promise<BlogPostResult> {
       return {
         data: {
           id: postSnapshot.id,
-          data: { ...postData, category: postData.category, categoryName: categoryName },
+          data: { ...formattedPostData, categoryName: categoryName },
         },
         error: null,
       };
