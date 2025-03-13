@@ -51,16 +51,16 @@ const createPost = ({ categories, error }: CreatePostProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file) {
+ 
       if (file.size > MAX_FILE_SIZE) {
         alert("File is too large. Please upload an image smaller than 3MB.");
       }
-    } else {
+ 
       setCoverImage({
         url: URL.createObjectURL(file),
         file: file,
       });
-    }
+   
   };
 
   //uploads for array of images
