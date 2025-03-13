@@ -97,7 +97,7 @@ const AddImage = ({
               <Image
                 src={coverImage.url}
                 alt="image"
-                layout="intrinsic"
+      
                 width={400}
                 height={300}
                 className={styles.image}
