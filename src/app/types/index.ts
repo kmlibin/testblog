@@ -38,12 +38,12 @@ export interface BlogPost {
   categoryName?: string;
   content: string;
   coverImage?: ImagePath;
-  date?: Date;
+  date?: string | null | Date;
   draft: boolean;
   slug: string;
   tags: string[];
   title: string;
-  editedAt?: Date;
+  editedAt?: string | null | Date;
   views: number;
 }
 
@@ -55,12 +55,12 @@ export interface BlogPostWithId {
     categoryName: string;
     content: string;
     coverImage?: ImagePath;
-    date?: Date;
+    date?: string| null | Date;
     draft: boolean;
     slug: string;
     tags: string[];
     title: string;
-    editedAt?: Date;
+    editedAt?: string | null | Date;
     views: number;
   };
 }
