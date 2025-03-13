@@ -1,9 +1,15 @@
-import { Timestamp } from "firebase/firestore/lite";
 
-export type ImageFile = {
+
+export type ImagePath = {
   url: string;
   path: string;
 };
+
+export type ImageFile = {
+  url: string;
+  file: File;
+};
+
 
 export interface CategoryWithId {
   id: string;
@@ -27,30 +33,34 @@ export interface Category {
 }
 
 export interface BlogPost {
-  additionalImages: ImageFile[];
+  additionalImages?: ImagePath[];
   category: string;
+  categoryName?: string;
   content: string;
-  coverImage: ImageFile;
-  date: Date;
+  coverImage?: ImagePath;
+  date?: Date;
   draft: boolean;
   slug: string;
   tags: string[];
   title: string;
+  editedAt?: Date;
   views: number;
 }
 
 export interface BlogPostWithId {
   id: string;
   data: {
-    additionalImages: ImageFile[];
+    additionalImages?: ImagePath[];
     category: string;
+    categoryName: string;
     content: string;
-    coverImage: ImageFile;
-    date: Date;
+    coverImage?: ImagePath;
+    date?: Date;
     draft: boolean;
     slug: string;
     tags: string[];
     title: string;
+    editedAt?: Date;
     views: number;
   };
 }
