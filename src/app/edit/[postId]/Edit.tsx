@@ -120,7 +120,7 @@ const Edit = ({
   // get image url and path for cover and additional photos
   try {
 
-    let newCoverUrl: { url: string; path: string } = {url: "", path: ""};
+    let newCoverUrl: { url: string; path: string } | undefined = undefined;
     let newImageUrls: { url: string; path: string }[] = [];
     let imageUrls
 
