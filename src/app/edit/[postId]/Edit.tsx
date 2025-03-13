@@ -12,6 +12,9 @@ import ReactQuill from "react-quill";
 import { MdUpload } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
 import Keywords from "@/app/createpost/Keywords";
+import { ImagePath } from "@/app/types";
+import EditAddImage from "@/components/editAddImages/editAddImages";
+import { editPost } from "@/app/actions/posts";
 
 type EditPostProps = {
   categories: CategoryWithId[] | null;
@@ -24,8 +27,6 @@ type ImageFile = {
   url: string;
   file: File;
 };
-
-type Props = {};
 
 const Edit = ({
   categories,
@@ -41,24 +42,29 @@ const Edit = ({
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
   const [content, setContent] = useState<string>(blogPost?.data?.content || "");
+  const [firebaseCoverImage, setFirebaseCoverImage] =
+    useState<ImagePath | null>(blogPost?.data?.coverImage || null);
   const [coverImage, setCoverImage] = useState<ImageFile | null>(null);
+  const [firebaseAdditionalImages, setFirebaseAdditionalImages] = useState<
+    ImagePath[] | null
+  >(blogPost?.data?.additionalImages || null);
   const [additionalImages, setAdditionalImages] = useState<ImageFile[]>([]);
   const [title, setTitle] = useState<string>(blogPost?.data.title || "");
-  const [catSlug, setCatSlug] = useState<string>();
+  const [catSlug, setCatSlug] = useState<string>(blogPost?.data.category || "");
   const [keywords, setKeywords] = useState<string[]>(
     blogPost?.data?.tags || []
   );
   const [loading, setLoading] = useState<boolean>(false);
   const [draft, setDraft] = useState<boolean>(blogPost?.data?.draft || false);
-
+  const [postId, setPostId] = useState<string>(blogPost?.id || "")
 
   useEffect(() => {
     const initialCategoryId =
-      categories?.find((cat) => cat.name === blogPost?.data.category)?.id || "";
+      categories?.find((cat) => cat.name === blogPost?.data.categoryName)?.id || "";
     setCatSlug(initialCategoryId);
   }, [blogPost, categories]);
 
-  console.log(blogPost);
+
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
 
   //upload for the cover photo
@@ -68,17 +74,17 @@ const Edit = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file) {
-      if (file.size > MAX_FILE_SIZE) {
-        alert("File is too large. Please upload an image smaller than 3MB.");
-      }
-    } else {
-      setCoverImage({
-        url: URL.createObjectURL(file),
-        file: file,
-      });
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File is too large. Please upload an image smaller than 3MB.");
     }
+
+    setCoverImage({
+      url: URL.createObjectURL(file),
+      file: file,
+    });
   };
+
+
 
   //uploads for array of images
   const handleAdditionalImageUpload = (
@@ -107,46 +113,82 @@ const Edit = ({
       .replace(/[^\w-]+/g, "");
   }
 
-  //creates blog post in firebase
-  //   const handlePublish = async (e: React.FormEvent<HTMLFormElement>) => {
-  //     e.preventDefault();
-  //     setLoading(true);
+  //edits blog post in firebase
+    const handleEdit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      setLoading(true);
+  // get image url and path for cover and additional photos
+  try {
 
-  //       //if successful
-  //       if (response.error === false) {
-  //         const { message, error, id } = response;
-  //         setLoading(false);
-  //         setSuccess(true);
-  //         setModalMessage(message);
-  //         setShowModal(true);
-  //         setNewPostId(id);
+    let newCoverUrl: { url: string; path: string } = {url: "", path: ""};
+    let newImageUrls: { url: string; path: string }[] = [];
+    let imageUrls
 
-  //         //clear state values
-  //         setTitle("");
-  //         setContent("");
-  //         setCoverImage(null);
-  //         setAdditionalImages([]);
-  //         setKeywords([]);
-  //         setDraft(false);
-  //         console.log("success!");
-  //       }
-  //       //if unsuccessful
-  //       if (response.error === true) {
-  //         const { message } = response;
-  //         setLoading(false);
-  //         setSuccess(false);
-  //         setModalMessage(message);
-  //         setShowModal(true);
-  //         console.log("failure");
-  //       }
-  //     } catch (error: any) {
-  //       console.log("error adding product");
-  //       setLoading(false);
-  //       setSuccess(false);
-  //       setModalMessage(error.message);
-  //       setShowModal(true);
-  //     }
-  //   };
+    // upload new images and get their URLs and paths
+    if (additionalImages.length > 0) {
+      newImageUrls = await Promise.all(
+        additionalImages.map((image) => uploadImage(image.file))
+      );
+    }
+
+    if(coverImage) {
+      newCoverUrl = await uploadImage(coverImage.file)
+    }
+
+    // Combine existing and new image URLs and paths
+    imageUrls = [...(firebaseAdditionalImages ?? []), ...newImageUrls];
+
+    //create object that now includes the urls
+    const post = {
+      title: title,
+      category: catSlug,
+      categoryName: blogPost?.data.categoryName || "",
+      content: content,
+      draft: draft,
+      tags: keywords,
+      views: 0,
+      coverImage: newCoverUrl,
+      additionalImages: imageUrls,
+      slug: generateSlug(title),
+    };
+
+    //call server action, editpost
+    const response = await editPost(postId, post);
+        //if successful
+        if (response.error === false) {
+          const { message, error} = response;
+          setLoading(false);
+          setSuccess(true);
+          setModalMessage(message);
+          setShowModal(true);
+      
+
+          //clear state values
+          setTitle("");
+          setContent("");
+          setCoverImage(null);
+          setAdditionalImages([]);
+          setKeywords([]);
+          setDraft(false);
+          console.log("success!");
+        }
+        //if unsuccessful
+        if (response.error === true) {
+          const { message } = response;
+          setLoading(false);
+          setSuccess(false);
+          setModalMessage(message);
+          setShowModal(true);
+          console.log("failure");
+        }
+      } catch (error: any) {
+        console.log("error adding product");
+        setLoading(false);
+        setSuccess(false);
+        setModalMessage(error.message);
+        setShowModal(true);
+      }
+    };
 
   const closeModal = () => {
     setShowModal(false);
@@ -154,9 +196,9 @@ const Edit = ({
       router.push("/");
     }
   };
-
+console.log(blogPost)
   //if blogpost error, return and display error on frontend
-  console.log(blogPostError);
+  
   if (blogPostError) {
     return <div className={styles.error}>Error fetching Post...</div>;
   }
@@ -164,7 +206,7 @@ const Edit = ({
   return (
     <div className={styles.container}>
       <Loading label="Adding blog to database..." isLoading={loading} />
-      <form className={styles.form}>
+      <form className={styles.form} onSubmit={handleEdit}>
         {/* //title */}
         <input
           type="text"
@@ -197,7 +239,11 @@ const Edit = ({
           </select>
         )}
         {/* Photo Uploads */}
-        <AddImage
+        <EditAddImage
+          firebaseCoverImage={firebaseCoverImage}
+          setFirebaseCoverImage={setFirebaseCoverImage}
+          firebaseAdditionalImages={firebaseAdditionalImages}
+          setFirebaseAdditionalImages={setFirebaseAdditionalImages}
           handleCoverImageUpload={handleCoverImageUpload}
           handleAdditionalImageUpload={handleAdditionalImageUpload}
           coverImage={coverImage}

@@ -8,6 +8,7 @@ import {
   doc,
   deleteDoc,
   arrayUnion,
+  arrayRemove
 } from "firebase/firestore/lite";
 import { db, storage } from "../firebase/config";
 import { ref, deleteObject } from "firebase/storage";
@@ -81,5 +82,79 @@ export async function createBlogPost(
     error: false,
     message: "Successfully added post to database!",
     id: newId ? newId : "/",
+  };
+}
+
+
+export async function editPost(postId: string, post:BlogPost) {
+  const {additionalImages, category, categoryName, content, coverImage, draft, tags, title, views, slug} = post
+  let postDate
+  try {
+    const postRef = doc(db, "posts", postId)
+    const postSnapshot = await getDoc(postRef)
+    const prevPost = postSnapshot.data()
+    if (prevPost) {
+      const {date} = prevPost
+      postDate = date
+
+            // handle category change
+            if (prevPost.category !== category) {
+              // get category document and snapshot of the current state
+              const prevPostDocRef = doc(db, "categories", prevPost.category);
+              const prevPostDocSnapshot = await getDoc(prevPostDocRef);
+      
+              if (prevPostDocSnapshot.exists()) {
+                const updatedCategoryData = {
+                  posts: arrayRemove(postId),
+                };
+                await updateDoc(prevPostDocRef, updatedCategoryData);
+              }
+            }
+          }
+
+    if (postRef) {
+      await updateDoc(postRef, {
+        additionalImages,
+        coverImage,
+        content,
+        category,
+        categoryName,
+        date: postDate,
+        editedAt: new Date(),
+        draft, 
+        tags,
+        title,
+        views,
+        slug
+      }) 
+
+      const newCategoryRef = doc(db, "categories", category)
+      if(newCategoryRef) {
+        const updateCategoryData = {
+          posts: arrayUnion(category)
+        }
+
+        await updateDoc(newCategoryRef, updateCategoryData)
+      }
+    }
+
+  } catch (error: any) {
+    if (error.code === "permission-denied") {
+      return {
+        error: true,
+        message: "Permission denied. Please try again later.",
+      };
+    }
+    return {
+      error: true,
+      message: "Error editing post in database, try again later",
+    };
+  }
+  //revalidate single path, main page, group page
+  revalidatePath("/")
+  return {
+    error: false,
+    message: "Successfully edited post to database!",
+
   };
 }
