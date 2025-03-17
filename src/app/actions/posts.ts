@@ -9,6 +9,7 @@ import {
   deleteDoc,
   arrayUnion,
   arrayRemove,
+  increment
 } from "firebase/firestore/lite";
 import { db, storage } from "../firebase/config";
 import { ref, deleteObject } from "firebase/storage";
@@ -179,6 +180,29 @@ export async function editPost(postId: string, post: BlogPost) {
   revalidatePath("/");
   return {
     error: false,
+    slug: slug,
     message: "Successfully edited post to database!",
   };
+}
+
+export async function addCount(postId: string) {
+  try {
+    const postRef = doc(db, "posts", postId);
+      await updateDoc(postRef, {
+        views: increment(1)
+      });
+ 
+  } catch (error) {
+    return {
+      error: true,
+      message: "Error adding to views, try again later",
+    };
+  }
+
+    //revalidate single path, main page, group page
+    revalidatePath("/");
+    return {
+      error: false,
+      message: "Successfully edited post to database!",
+    };
 }
