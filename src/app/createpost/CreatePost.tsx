@@ -27,8 +27,6 @@ type ImageFile = {
 const createPost = ({ categories, error }: CreatePostProps) => {
   const router = useRouter();
 
-  const [showCategoryErrorModal, setShowCategoryErrorModal] =
-    useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
