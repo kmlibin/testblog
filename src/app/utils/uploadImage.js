@@ -10,6 +10,8 @@ const generateRandomNumber = () => {
 
 //must keep in client? in server, it doesn't like that i pass back the urls for some reason, says it doesn't like [File]. right now in two, put in a diff file and clean up
 export const uploadImage = async (file) => {
+console.log('runs')
+
   if (!file || !(file instanceof File)) {
     console.error("Invalid file:", file);
     throw new Error("Invalid file uploaded");
