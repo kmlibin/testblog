@@ -35,7 +35,6 @@ const EditAddImage = ({
     const [numOfImages, setNumOfImages] = useState<number>(0);
     const [useURLForCoverImage, setUseURLForCoverImage] = useState<string>("");
     
-console.log(coverImage, firebaseCoverImage)
     useEffect(() => {
       const url = determineURL()
       if (url) {
@@ -119,7 +118,7 @@ console.log(coverImage, firebaseCoverImage)
             type="file"
             id="coverImageUpload"
             style={{ display: "none" }}
-            accept="image/*"
+            accept="image/jpeg, image/png"
             onChange={handleCoverImageUpload}
           />
 
@@ -209,7 +208,7 @@ console.log(coverImage, firebaseCoverImage)
         type="file"
         id="additionalImagesUpload"
         style={{ display: "none" }}
-        accept="image/*"
+        accept="image/jpeg, image/png"
         multiple
         onChange={handleAdditionalImageUpload}
       />
