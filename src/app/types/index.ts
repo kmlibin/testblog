@@ -52,7 +52,7 @@ export interface BlogPostWithId {
   data: {
     additionalImages?: ImagePath[];
     category: string;
-    categoryName: string;
+    categoryName?: string | undefined;
     content: string;
     coverImage?: ImagePath;
     date?: string| null | Date;

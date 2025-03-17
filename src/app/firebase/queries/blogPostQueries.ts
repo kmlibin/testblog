@@ -44,21 +44,11 @@ export async function getBlogPostById(id: string): Promise<BlogPostResult> {
               ? postData.editedAt.toDate().toISOString()
               : null,
         };
-      //fetch category name, since category is saved as an id in the blogpost
-      let categoryName = "Other";
-      if (postData.category) {
-        const categoryRef = doc(db, "categories", postData.category);
-        const categorySnapshot = await getDoc(categoryRef);
-        if (categorySnapshot.exists()) {
-          const categoryData = categorySnapshot.data() as Category;
-          categoryName = categoryData.name;
-        }
-      }
 
       return {
         data: {
           id: postSnapshot.id,
-          data: { ...formattedPostData, categoryName: categoryName },
+          data: formattedPostData ,
         },
         error: null,
       };

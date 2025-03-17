@@ -14,6 +14,7 @@ import { db, storage } from "../firebase/config";
 import { ref, deleteObject } from "firebase/storage";
 import { BlogPost } from "../types";
 import { revalidatePath } from "next/cache";
+import { getCategoryName } from "../firebase/queries/sectionQueries";
 
 interface SuccessResponse {
   error: false;
@@ -47,28 +48,25 @@ export async function createBlogPost(
 
   const postWithDate = { ...post, date: new Date(), editedAt: new Date() };
   let newId;
-  let categoryName = "Other"
+  let categoryName = "Other";
   try {
     //get categoryName first so it can be attached to the post
-    const categoryDocRef = doc(db, "categories", category);
-    const categoryDocSnapshot = await getDoc(categoryDocRef);
-    if (categoryDocSnapshot.exists()) {
-      const categoryData = categoryDocSnapshot.data();
-      console.log("categoryData", categoryData);
-      categoryName = categoryData.name;
-
-    }
+    categoryName = await getCategoryName(category);
     //add the post to the db
-    const newPost = await addDoc(collection(db, "posts"), {...postWithDate, categoryName});
+    const newPost = await addDoc(collection(db, "posts"), {
+      ...postWithDate,
+      categoryName,
+    });
     //if new post is successful, get id variable, then add it to the appropriate category
     if (newPost.id) {
       newId = newPost.id;
+      const categoryDocRef = doc(db, "categories", category);
+      const categoryDocSnapshot = await getDoc(categoryDocRef);
       if (categoryDocSnapshot.exists()) {
         const updatedCategoryData = {
           posts: arrayUnion(newId),
         };
         await updateDoc(categoryDocRef, updatedCategoryData);
-        
       } else {
         console.log("section does not exist");
       }
@@ -133,7 +131,7 @@ export async function editPost(postId: string, post: BlogPost) {
         }
       }
     }
-     //add postID to new category
+    //add postID to new category
     const newCategoryRef = doc(db, "categories", category);
 
     if (newCategoryRef) {
@@ -145,15 +143,7 @@ export async function editPost(postId: string, post: BlogPost) {
     }
     //get new categoryName
     if (category) {
-      const categoryRef = doc(db, "categories", category);
-      const categorySnapshot = await getDoc(categoryRef);
-
-      if (categorySnapshot.exists()) {
-        const categoryData = categorySnapshot.data();
-        console.log("categoryData", categoryData);
-        newCategoryName = categoryData.name;
-        console.log("new category name", newCategoryName);
-      }
+      newCategoryName = await getCategoryName(category);
     }
 
     if (postRef) {
@@ -171,8 +161,6 @@ export async function editPost(postId: string, post: BlogPost) {
         views,
         slug,
       });
-
-     
     }
   } catch (error: any) {
     console.log(error);
