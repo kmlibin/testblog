@@ -6,15 +6,15 @@ import Loading from "@/components/loading/Loading";
 import styles from "./edit.module.css";
 import { BlogPostWithId, CategoryWithId } from "@/app/types";
 import { uploadImage } from "@/app/utils/uploadImage";
-
 import "react-quill/dist/quill.bubble.css";
 import ReactQuill from "react-quill";
 import { MdUpload } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
 import Keywords from "@/app/createpost/Keywords";
 import { ImagePath } from "@/app/types";
-import EditAddImage from "@/app/edit/[postId]/editAddImages";
+import EditAddImage from "@/components/editAddImages/editAddImages";
 import { editPost } from "@/app/actions/posts";
+import paths from "@/paths";
 
 type EditPostProps = {
   categories: CategoryWithId[] | null;
@@ -35,10 +35,8 @@ const Edit = ({
   blogPost,
 }: EditPostProps) => {
   const router = useRouter();
-
-  const [showCategoryErrorModal, setShowCategoryErrorModal] =
-    useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
+  const [postSlug, setPostSlug] = useState<string | null>(null)
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
   const [content, setContent] = useState<string>(blogPost?.data?.content || "");
@@ -117,7 +115,7 @@ const Edit = ({
       }
     });
   };
-  console.log("coverImage", coverImage);
+
   //creates the slug
   function generateSlug(title: string) {
     return title
@@ -125,7 +123,7 @@ const Edit = ({
       .replace(/ /g, "-")
       .replace(/[^\w-]+/g, "");
   }
-console.log('category', catSlug)
+
   //edits blog post in firebase
   const handleEdit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -175,12 +173,13 @@ console.log('category', catSlug)
       const response = await editPost(postId, post);
       //if successful
       if (response.error === false) {
-        const { message, error } = response;
+        const { message, slug } = response;
         setLoading(false);
         setSuccess(true);
         setModalMessage(message);
+        setPostSlug(slug ? slug : "/")
         setShowModal(true);
-
+      
         //clear state values
         setTitle("");
         setContent("");
@@ -188,7 +187,6 @@ console.log('category', catSlug)
         setAdditionalImages([]);
         setKeywords([]);
         setDraft(false);
-        console.log("success!");
       }
       //if unsuccessful
       if (response.error === true) {
@@ -210,8 +208,8 @@ console.log('category', catSlug)
 
   const closeModal = () => {
     setShowModal(false);
-    if (success == true) {
-      router.push("/");
+    if (success == true && postSlug) {
+      router.push(paths.viewEditedSinglePostPage(postSlug, postId));
     }
   };
   console.log(blogPost);
@@ -298,11 +296,6 @@ console.log('category', catSlug)
           <p>{modalMessage}</p>
         </div>
       </Modal>
-      {/* <Modal show={showCategoryErrorModal} onClose={closeCategoryModal}>
-      <div>
-        <p>{addCategoryError}</p>
-      </div>
-    </Modal> */}
     </div>
   );
 };
