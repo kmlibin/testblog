@@ -13,7 +13,17 @@
 
 .title{
     font-size: 64px;
-    margin-bottom: 50px;
+    margin-bottom: 1rem;
+    
+}
+
+.catName{
+  font-size: 16px;
+  background-color:aquamarine;
+  width: max-content;
+  padding: .5rem;
+  border-radius: 15px;
+  margin-bottom: 50px;
 }
 .user{
     display: flex;
@@ -47,11 +57,12 @@
 .imageContainer {
   flex: 1;
   height: 350px;
+  width: auto;
   position: relative;
 }
 
 .image {
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .content{
