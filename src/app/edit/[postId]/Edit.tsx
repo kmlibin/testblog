@@ -279,7 +279,7 @@ console.log('category', catSlug)
         <Keywords keywords={keywords} setKeywords={setKeywords} />
         <div className={styles.buttons}>
           <button type="submit" className={styles.publish} disabled={loading}>
-            Publish
+            Publish Changes
             <MdUpload />
           </button>
           <button
