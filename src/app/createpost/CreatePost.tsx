@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import styles from "./createPost.module.css";
 import { useRouter } from "next/navigation";
-
 import "react-quill/dist/quill.bubble.css";
 import ReactQuill from "react-quill";
 import { createBlogPost } from "../actions/posts";
@@ -28,7 +27,8 @@ type ImageFile = {
 const createPost = ({ categories, error }: CreatePostProps) => {
   const router = useRouter();
 
-  const [showCategoryErrorModal, setShowCategoryErrorModal] = useState<boolean>(false);
+  const [showCategoryErrorModal, setShowCategoryErrorModal] =
+    useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
@@ -43,6 +43,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
   const [newPostId, setNewPostId] = useState<string | null>(null);
 
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
+  const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
 
   //upload for the cover photo
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,16 +52,21 @@ const createPost = ({ categories, error }: CreatePostProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
- 
-      if (file.size > MAX_FILE_SIZE) {
-        alert("File is too large. Please upload an image smaller than 3MB.");
-      }
- 
-      setCoverImage({
-        url: URL.createObjectURL(file),
-        file: file,
-      });
-   
+    //checks type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      alert("Invalid file type. Please upload a JPEG or PNG image.");
+      return;
+    }
+
+    //checks size
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File is too large. Please upload an image smaller than 3MB.");
+    }
+
+    setCoverImage({
+      url: URL.createObjectURL(file),
+      file: file,
+    });
   };
 
   //uploads for array of images
@@ -73,6 +79,13 @@ const createPost = ({ categories, error }: CreatePostProps) => {
     const files = e.target.files ? Array.from(e.target.files) : [];
 
     files.forEach((file) => {
+      //checks type
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        alert("Invalid file type. Please upload a JPEG or PNG image.");
+        return;
+      }
+
+      //checks size
       if (file.size > MAX_FILE_SIZE) {
         alert("File is too large. Please upload an image smaller than 3MB.");
       } else {
@@ -109,7 +122,6 @@ const createPost = ({ categories, error }: CreatePostProps) => {
         draft: draft,
         tags: keywords,
         views: 0,
-        date: new Date(),
         coverImage: coverUrlAndPath,
         additionalImages: imageUrlsAndPaths,
         slug: generateSlug(title),
