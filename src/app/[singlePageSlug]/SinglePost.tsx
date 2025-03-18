@@ -25,6 +25,7 @@ console.log(blogPost)
       tags,
       date,
       draft,
+      editedAt,
       coverImage,
       additionalImages,
     } = blogPost?.data;
@@ -36,6 +37,11 @@ const formattedDate = date ? new Date(date).toLocaleDateString("en-US", {
     day: "numeric"
 }) : "Invalid Date"
 
+const formattedEditedDate = editedAt? new Date(editedAt).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+}) : "Invalid Date"
   return (
     <div className={styles.container}>
       <div className={styles.infoContainer}>
@@ -51,6 +57,7 @@ const formattedDate = date ? new Date(date).toLocaleDateString("en-US", {
             <div className={styles.userTextContainer}>
               <span className={styles.username}>Author Name</span>
               <span className={styles.date}>{formattedDate}</span>
+              {editedAt? (<span className={styles.editedAt}>Last Edited: {formattedEditedDate}</span>) : null}
             </div>
           </div>
         </div>

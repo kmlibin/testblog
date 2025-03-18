@@ -49,6 +49,10 @@
     color: var(--softTextColor)
 }
 
+.editedAt {
+  
+}
+
 .username{
     font-size: 20px;
     font-weight: 500;
