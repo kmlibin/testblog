@@ -3,7 +3,22 @@ import styles from "./menu.module.css";
 import Link from "next/link";
 import Image from "next/image";
 import MenuPosts from "../menuPosts/MenuPosts";
-const Menu = () => {
+import { getPicks } from "@/app/actions/myPicks";
+
+
+ export async function Menu ()  {
+  let myPicks: any = null
+  let myPicksError: any = null
+
+  const getMyPicks = await getPicks();
+  if (getMyPicks.error) {
+    myPicksError = getMyPicks.error;
+  } else {
+    myPicks = getMyPicks.data;
+  }
+
+  console.log(myPicks)
+
   return (
     <div className={styles.container}>
       <h2 className={styles.subtitle}>{"What's Hot"}</h2>
