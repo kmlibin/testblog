@@ -6,15 +6,16 @@ import Loading from "@/components/loading/Loading";
 import styles from "./edit.module.css";
 import { BlogPostWithId, CategoryWithId } from "@/app/types";
 import { uploadImage } from "@/app/utils/uploadImage";
-import "react-quill/dist/quill.bubble.css";
+import "react-quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import { MdUpload } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
 import Keywords from "@/app/createpost/Keywords";
 import { ImagePath } from "@/app/types";
-import EditAddImage from "@/components/editAddImages/editAddImages";
+import EditAddImage from "@/app/edit/[postId]/editAddImages";
 import { editPost } from "@/app/actions/posts";
 import paths from "@/paths";
+import MyPick from "@/components/myPick/MyPick";
 
 type EditPostProps = {
   categories: CategoryWithId[] | null;
@@ -35,16 +36,17 @@ const Edit = ({
   blogPost,
 }: EditPostProps) => {
   const router = useRouter();
+  const [myPick, setMyPick] = useState<boolean>(
+    blogPost?.data?.myPick || false
+  );
   const [modalMessage, setModalMessage] = useState<string>("");
-  const [postSlug, setPostSlug] = useState<string | null>(null)
+  const [postSlug, setPostSlug] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
   const [content, setContent] = useState<string>(blogPost?.data?.content || "");
   const [firebaseCoverImage, setFirebaseCoverImage] =
     useState<ImagePath | null>(blogPost?.data?.coverImage || null);
-  const [coverImage, setCoverImage] = useState<ImageFile | any>(
-    null
-  );
+  const [coverImage, setCoverImage] = useState<ImageFile | any>(null);
   const [firebaseAdditionalImages, setFirebaseAdditionalImages] = useState<
     ImagePath[] | null
   >(blogPost?.data?.additionalImages || null);
@@ -124,6 +126,11 @@ const Edit = ({
       .replace(/[^\w-]+/g, "");
   }
 
+  //checkbox
+  const handleCheckboxChange = () => {
+    setMyPick((prev) => !prev);
+  };
+
   //edits blog post in firebase
   const handleEdit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -157,6 +164,7 @@ const Edit = ({
 
       //create object that now includes the urls
       const post = {
+        myPick: myPick,
         title: title,
         category: catSlug,
         categoryName: blogPost?.data.categoryName || "",
@@ -177,9 +185,9 @@ const Edit = ({
         setLoading(false);
         setSuccess(true);
         setModalMessage(message);
-        setPostSlug(slug ? slug : "/")
+        setPostSlug(slug ? slug : "/");
         setShowModal(true);
-      
+
         //clear state values
         setTitle("");
         setContent("");
@@ -212,7 +220,7 @@ const Edit = ({
       router.push(paths.viewEditedSinglePostPage(postSlug, postId));
     }
   };
-  console.log(blogPost);
+  console.log(myPick);
   //if blogpost error, return and display error on frontend
   if (blogPostError) {
     return <div className={styles.error}>Error fetching Post...</div>;
@@ -269,12 +277,13 @@ const Edit = ({
         <div className={styles.editor}>
           <ReactQuill
             className={styles.textArea}
-            theme="bubble"
+            theme="snow"
             value={content}
             onChange={setContent}
           />
         </div>
         <Keywords keywords={keywords} setKeywords={setKeywords} />
+        <MyPick myPick={myPick} handleCheckboxChange={handleCheckboxChange} />
         <div className={styles.buttons}>
           <button type="submit" className={styles.publish} disabled={loading}>
             Publish Changes

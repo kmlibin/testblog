@@ -1,0 +1,49 @@
+.myPickContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0rem 0 2rem 0;
+  }
+  
+  .addPick {
+    background-color: #007aff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .addPick:hover {
+    background-color: #005bb5;
+  }
+  
+  .pickedWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .pickedChip {
+    background-color: #28a745;
+    color: white;
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 16px;
+    font-weight: bold;
+  }
+  
+  .removePick {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .removePick:hover {
+    background-color: #a71d2a;
+  }

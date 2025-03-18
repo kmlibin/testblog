@@ -13,6 +13,8 @@ import { MdUpload } from "react-icons/md";
 import { FaRegSave } from "react-icons/fa";
 import Modal from "@/components/modal/Modal";
 import Loading from "@/components/loading/Loading";
+import MyPick from "@/components/myPick/MyPick";
+import paths from "@/paths";
 
 type CreatePostProps = {
   categories: CategoryWithId[] | null;
@@ -26,7 +28,7 @@ type ImageFile = {
 
 const createPost = ({ categories, error }: CreatePostProps) => {
   const router = useRouter();
-
+const [myPick, setMyPick] = useState<boolean>(false)
   const [modalMessage, setModalMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
@@ -101,6 +103,10 @@ const createPost = ({ categories, error }: CreatePostProps) => {
       .replace(/[^\w-]+/g, "");
   }
 
+    //checkbox
+    const handleCheckboxChange = () => {
+      setMyPick((prev) => !prev);
+    };
   //creates blog post in firebase
   const handlePublish = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -114,6 +120,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
       const coverUrlAndPath = await uploadImage(coverImage?.file);
       //create object that now includes the urls
       const post = {
+        myPick: myPick,
         title: title,
         category: catSlug,
         content: content,
@@ -131,10 +138,11 @@ const createPost = ({ categories, error }: CreatePostProps) => {
       if (response.error === false) {
         const { message, error, id } = response;
         setLoading(false);
-        setSuccess(true);
+        setSuccess(true); 
+        setNewPostId(id);
         setModalMessage(message);
         setShowModal(true);
-        setNewPostId(id);
+       
 
         //clear state values
         setTitle("");
@@ -165,8 +173,8 @@ const createPost = ({ categories, error }: CreatePostProps) => {
 
   const closeModal = () => {
     setShowModal(false);
-    if (success == true) {
-      router.push("/");
+    if (success == true && newPostId) {
+      router.push(paths.viewSinglePostPage(newPostId));
     }
   };
 
@@ -222,6 +230,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
           />
         </div>
         <Keywords keywords={keywords} setKeywords={setKeywords} />
+        <MyPick handleCheckboxChange={handleCheckboxChange} myPick={myPick} />
         <div className={styles.buttons}>
           <button type="submit" className={styles.publish} disabled={loading}>
             Publish
