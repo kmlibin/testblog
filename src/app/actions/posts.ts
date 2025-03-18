@@ -9,13 +9,14 @@ import {
   deleteDoc,
   arrayUnion,
   arrayRemove,
-  increment
+  increment,
 } from "firebase/firestore/lite";
 import { db, storage } from "../firebase/config";
 import { ref, deleteObject } from "firebase/storage";
 import { BlogPost } from "../types";
 import { revalidatePath } from "next/cache";
 import { getCategoryName } from "../firebase/queries/sectionQueries";
+import { checkQuantityOfPicks } from "./myPicks";
 
 interface SuccessResponse {
   error: false;
@@ -33,23 +34,13 @@ type CreateBlogPostResponse = SuccessResponse | ErrorResponse;
 export async function createBlogPost(
   post: BlogPost
 ): Promise<CreateBlogPostResponse> {
-  const {
-    title,
-    additionalImages,
-    coverImage,
-    content,
-    date,
-    draft,
-    slug,
-    views,
-    tags,
-    category,
-  } = post;
+  const { myPick, category } = post;
   //create variable so can pass back id to frontend success return
 
   const postWithDate = { ...post, date: new Date(), editedAt: new Date() };
   let newId;
   let categoryName = "Other";
+
   try {
     //get categoryName first so it can be attached to the post
     categoryName = await getCategoryName(category);
@@ -58,9 +49,12 @@ export async function createBlogPost(
       ...postWithDate,
       categoryName,
     });
-    //if new post is successful, get id variable, then add it to the appropriate category
+
+    //if new post is successful, get id variable,
     if (newPost.id) {
       newId = newPost.id;
+
+      // add it to the appropriate category
       const categoryDocRef = doc(db, "categories", category);
       const categoryDocSnapshot = await getDoc(categoryDocRef);
       if (categoryDocSnapshot.exists()) {
@@ -70,6 +64,24 @@ export async function createBlogPost(
         await updateDoc(categoryDocRef, updatedCategoryData);
       } else {
         console.log("section does not exist");
+      }
+
+      //if mypick is true, add it to mypicks collection, but only if there are fewer than 5.
+      if (myPick) {
+        const myPicksRef = doc(db, "myPicks", "picks");
+        const myPicksDocSnapshot = await getDoc(myPicksRef);
+        if (myPicksDocSnapshot.exists()) {
+          const currentPicks = myPicksDocSnapshot.data().posts || [];
+          //check how many posts there are in the array. must be fewer than 5. if this fails, it returns an error.
+          checkQuantityOfPicks(currentPicks, newId);
+
+          const updatedPicks = {
+            posts: arrayUnion(newId),
+          };
+          await updateDoc(myPicksRef, updatedPicks);
+        } else {
+          return { error: true, message: "too many picks" };
+        }
       }
     }
   } catch (error: any) {
@@ -106,6 +118,7 @@ export async function editPost(postId: string, post: BlogPost) {
     title,
     views,
     slug,
+    myPick,
   } = post;
   let postDate;
   let newCategoryName = "Other";
@@ -114,6 +127,7 @@ export async function editPost(postId: string, post: BlogPost) {
     const postRef = doc(db, "posts", postId);
     const postSnapshot = await getDoc(postRef);
     const prevPost = postSnapshot.data();
+    
     if (prevPost) {
       //keep the date consistent
       const { date } = prevPost;
@@ -147,8 +161,35 @@ export async function editPost(postId: string, post: BlogPost) {
       newCategoryName = await getCategoryName(category);
     }
 
+    //check and update myPick in the myPicks collection
+    if (prevPost?.myPick !== myPick) {
+      const myPicksRef = doc(db, "myPicks", "picks");
+      const myPicksDocSnapshot = await getDoc(myPicksRef);
+      if (myPicksDocSnapshot.exists()) {
+        const currentPicks = myPicksDocSnapshot.data().posts || [];
+        //check how many posts there are in the array. must be fewer than 5. if this fails, it returns an error.
+        if (myPick) {
+          checkQuantityOfPicks(currentPicks, postId);
+          const updatedPicks = {
+            posts: arrayUnion(postId),
+          };
+
+          await updateDoc(myPicksRef, updatedPicks);
+        } else {
+          //if my pick is false, remove from myPicks
+          const updatedPicks = {
+            posts: arrayRemove(postId)
+          }
+          await updateDoc(myPicksRef, updatedPicks);
+        }
+      } else {
+        return { error: true, message: "Error updating picks collection" };
+      }
+    }
+
     if (postRef) {
       await updateDoc(postRef, {
+        myPick,
         additionalImages,
         coverImage,
         content,
@@ -188,10 +229,9 @@ export async function editPost(postId: string, post: BlogPost) {
 export async function addCount(postId: string) {
   try {
     const postRef = doc(db, "posts", postId);
-      await updateDoc(postRef, {
-        views: increment(1)
-      });
- 
+    await updateDoc(postRef, {
+      views: increment(1),
+    });
   } catch (error) {
     return {
       error: true,
@@ -199,10 +239,10 @@ export async function addCount(postId: string) {
     };
   }
 
-    //revalidate single path, main page, group page
-    revalidatePath("/");
-    return {
-      error: false,
-      message: "Successfully edited post to database!",
-    };
+  //revalidate single path, main page, group page
+  revalidatePath("/");
+  return {
+    error: false,
+    message: "Successfully edited post to database!",
+  };
 }
