@@ -2,19 +2,19 @@
 import React, { useState } from "react";
 import styles from "./createPost.module.css";
 import { useRouter } from "next/navigation";
-import "react-quill/dist/quill.bubble.css";
+import "react-quill/dist/quill.snow.css";
 import ReactQuill from "react-quill";
 import { createBlogPost } from "../actions/posts";
 import AddImage from "./AddImage";
 import { uploadImage } from "../utils/uploadImage";
 import { CategoryWithId } from "../types";
 import Keywords from "./Keywords";
-import { MdUpload } from "react-icons/md";
-import { FaRegSave } from "react-icons/fa";
+import generateSlug from "../utils/generateSlug";
 import Modal from "@/components/modal/Modal";
 import Loading from "@/components/loading/Loading";
 import MyPick from "@/components/myPick/MyPick";
 import paths from "@/paths";
+import DraftSaveButtons from "@/components/draftSaveButtons/draftSaveButtons";
 
 type CreatePostProps = {
   categories: CategoryWithId[] | null;
@@ -28,7 +28,8 @@ type ImageFile = {
 
 const createPost = ({ categories, error }: CreatePostProps) => {
   const router = useRouter();
-const [myPick, setMyPick] = useState<boolean>(false)
+  const [featured, setFeatured] = useState<boolean>(false);
+  const [myPick, setMyPick] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
   const [showModal, setShowModal] = useState<boolean>(false);
   const [success, setSuccess] = useState<boolean>(false);
@@ -95,18 +96,15 @@ const [myPick, setMyPick] = useState<boolean>(false)
     });
   };
 
-  //creates the slug
-  function generateSlug(title: string) {
-    return title
-      .toLowerCase()
-      .replace(/ /g, "-")
-      .replace(/[^\w-]+/g, "");
-  }
+  //checkbox for my pick
+  const handleMyPickChange = () => {
+    setMyPick((prev) => !prev);
+  };
+  //box for featured
+  const handleFeaturedChange = () => {
+    setFeatured((prev) => !prev);
+  };
 
-    //checkbox
-    const handleCheckboxChange = () => {
-      setMyPick((prev) => !prev);
-    };
   //creates blog post in firebase
   const handlePublish = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -120,6 +118,7 @@ const [myPick, setMyPick] = useState<boolean>(false)
       const coverUrlAndPath = await uploadImage(coverImage?.file);
       //create object that now includes the urls
       const post = {
+        featured: featured,
         myPick: myPick,
         title: title,
         category: catSlug,
@@ -138,11 +137,10 @@ const [myPick, setMyPick] = useState<boolean>(false)
       if (response.error === false) {
         const { message, error, id } = response;
         setLoading(false);
-        setSuccess(true); 
+        setSuccess(true);
         setNewPostId(id);
         setModalMessage(message);
         setShowModal(true);
-       
 
         //clear state values
         setTitle("");
@@ -223,29 +221,24 @@ const [myPick, setMyPick] = useState<boolean>(false)
         <div className={styles.editor}>
           <ReactQuill
             className={styles.textArea}
-            theme="bubble"
+            theme="snow"
             value={content}
             onChange={setContent}
             placeholder="Tell your story..."
           />
         </div>
         <Keywords keywords={keywords} setKeywords={setKeywords} />
-        <MyPick handleCheckboxChange={handleCheckboxChange} myPick={myPick} />
-        <div className={styles.buttons}>
-          <button type="submit" className={styles.publish} disabled={loading}>
-            Publish
-            <MdUpload />
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            onClick={() => setDraft(true)}
-            className={styles.draft}
-          >
-            Save as Draft
-            <FaRegSave />
-          </button>
-        </div>
+        <MyPick
+          type="featured"
+          toggle={featured}
+          handleCheckboxChange={handleFeaturedChange}
+        />
+        <MyPick
+          type="myPick"
+          toggle={myPick}
+          handleCheckboxChange={handleMyPickChange}
+        />
+        <DraftSaveButtons type="create" loading={loading} setDraft={setDraft} />
       </form>
       <Modal show={showModal} onClose={closeModal}>
         <div>
