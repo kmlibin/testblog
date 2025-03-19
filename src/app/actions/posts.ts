@@ -15,13 +15,14 @@ import { db, storage } from "../firebase/config";
 import { ref, deleteObject } from "firebase/storage";
 import { BlogPost } from "../types";
 import { revalidatePath } from "next/cache";
-import { getCategoryName } from "../firebase/queries/sectionQueries";
+import { getCategoryNameAndColor } from "../firebase/queries/sectionQueries";
 import { checkQuantityOfPicks } from "./myPicks";
 
 interface SuccessResponse {
   error: false;
   message: string;
   id: string;
+  slug: string;
 }
 
 interface ErrorResponse {
@@ -34,25 +35,27 @@ type CreateBlogPostResponse = SuccessResponse | ErrorResponse;
 export async function createBlogPost(
   post: BlogPost
 ): Promise<CreateBlogPostResponse> {
-  const { myPick, category, featured } = post;
+  const { myPick, category, featured, slug } = post;
   //create variable so can pass back id to frontend success return
 
   const postWithDate = { ...post, date: new Date(), editedAt: new Date() };
   let newId;
-  let categoryName = "Other";
+
 
   try {
     //get categoryName first so it can be attached to the post
-    categoryName = await getCategoryName(category);
+    const response = await getCategoryNameAndColor(category);
     //add the post to the db
     const newPost = await addDoc(collection(db, "posts"), {
       ...postWithDate,
-      categoryName,
+      categoryName : response?.name,
+      categoryColor: response?.color,
     });
 
     //if new post is successful, get id variable,
     if (newPost.id) {
       newId = newPost.id;
+      
 
       // add it to the appropriate category
       const categoryDocRef = doc(db, "categories", category);
@@ -119,6 +122,8 @@ export async function createBlogPost(
     error: false,
     message: "Successfully added post to database!",
     id: newId ? newId : "/",
+    slug: slug,
+
   };
 }
 
@@ -139,6 +144,8 @@ export async function editPost(postId: string, post: BlogPost) {
   } = post;
   let postDate;
   let newCategoryName = "Other";
+  let newCategoryColor = "#7A5DC7"
+
 
   try {
     const postRef = doc(db, "posts", postId);
@@ -175,7 +182,9 @@ export async function editPost(postId: string, post: BlogPost) {
     }
     //get new categoryName
     if (category) {
-      newCategoryName = await getCategoryName(category);
+       const response = await getCategoryNameAndColor(category);
+       newCategoryName = response?.name
+       newCategoryColor = response?.color
     }
 
     //check and update featured collection
@@ -233,6 +242,7 @@ export async function editPost(postId: string, post: BlogPost) {
         content,
         category,
         categoryName: newCategoryName,
+        categoryColor: newCategoryColor,
         date: postDate,
         editedAt: new Date(),
         draft,
