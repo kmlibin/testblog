@@ -8,15 +8,15 @@ const paths = {
   createPostPage() {
     return "/createpost";
   },
-  viewSinglePostPage(singlePageSlug: string) {
-    return `/${singlePageSlug}`;
-  },
-  viewEditedSinglePostPage(singlePageSlug: string, postId: string) {
+  viewSinglePostPage(singlePageSlug: string, postId: string) {
     return `/${singlePageSlug}?id=${postId}`
   },
   viewAllPostsPage() {
     return `/allposts`;
   },
+  viewCategoryPage(categoryName: string, category: string) {
+    return `/category/${categoryName}?id=${category}`
+  }
 };
 
 export default paths;
