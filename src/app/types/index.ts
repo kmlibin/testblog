@@ -33,6 +33,7 @@ export interface Category {
 }
 
 export interface BlogPost {
+  featured: boolean;
   myPick: boolean;
   additionalImages?: ImagePath[];
   category: string;
@@ -51,6 +52,7 @@ export interface BlogPost {
 export interface BlogPostWithId {
   id: string;
   data: {
+    featured: boolean;
     myPick: boolean;
     additionalImages?: ImagePath[];
     category: string;
