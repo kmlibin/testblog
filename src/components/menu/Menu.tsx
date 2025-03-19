@@ -6,83 +6,54 @@ import MenuPosts from "../menuPosts/MenuPosts";
 import { getPicks } from "@/app/firebase/queries/picksQueries";
 import { getPopularPosts } from "@/app/firebase/queries/blogPostQueries";
 import { BlogPostWithId } from "@/app/types";
+import { CategoryWithId } from "@/app/types";
+import paths from "@/paths";
 
-export  function Menu() {
-  let myPicks: BlogPostWithId[] | null = null;
-  let myPicksError: string | null = null;
-  let popularPosts: BlogPostWithId[] | null = null;
-  let popularPostsError: string | null = null;
-
-  // const getPosts = await getPopularPosts();
-  // if (getPosts.error) {
-  //   popularPostsError = getPosts.error;
-  // } else {
-  //   popularPosts = getPosts.data;
-  // }
-
-  // // console.log('popular', popularPosts)
-
-  // const getMyPicks = await getPicks();
-  // if (getMyPicks.error) {
-  //   myPicksError = getMyPicks.error;
-  // } else {
-  //   myPicks = getMyPicks.data;
-  // }
-
-  // console.log(myPicks)
-
+type MenuProps = {
+  myPicks: BlogPostWithId[] | null;
+  myPicksError: string | null;
+  popularPostsError: string | null;
+  popularPosts: BlogPostWithId[] | null;
+  categories: CategoryWithId[] | null;
+  categoriesError: string | null;
+};
+export function Menu({
+  myPicks,
+  myPicksError,
+  popularPosts,
+  popularPostsError,
+  categories,
+  categoriesError,
+}: MenuProps) {
   return (
     <div className={styles.container}>
       <h2 className={styles.subtitle}>{"What's Hot"}</h2>
       <h1 className={styles.title}>Most Popular</h1>
-      <MenuPosts withImage={false} />
+      <MenuPosts
+        withImage={false}
+        posts={popularPosts ? popularPosts : null}
+        error={popularPostsError}
+      />
       <h2 className={styles.subtitle}>Discover By Topic</h2>
       <h1 className={styles.title}>Categories</h1>
       <div className={styles.categoryList}>
-        <Link
-          href="/blog?cat=coding"
-          className={`${styles.categoryItem} ${styles.coding}`}
+        {categories?.map((cat) => (
+            <Link
+          href={paths.viewCategoryPage(cat.name, cat.id)}
+          className={styles.categoryItem}
+          style={{backgroundColor: cat.color}}
         >
-          {" "}
-          Coding
+          
+          {cat.name}
         </Link>
+        ))}
+      
 
-        <Link
-          href="/blog?cat=travel"
-          className={`${styles.categoryItem} ${styles.travel}`}
-        >
-          {" "}
-          Travel
-        </Link>
-
-        <Link
-          href="/blog?cat=food"
-          className={`${styles.categoryItem} ${styles.food}`}
-        >
-          {" "}
-          Cooking
-        </Link>
-
-        <Link
-          href="/blog?cat=gardening"
-          className={`${styles.categoryItem} ${styles.gardening}`}
-        >
-          {" "}
-          Gardening
-        </Link>
-
-        <Link
-          href="/blog?cat=other"
-          className={`${styles.categoryItem} ${styles.other}`}
-        >
-          {" "}
-          Other
-        </Link>
       </div>
 
       <h2 className={styles.subtitle}>Chosen by the editor</h2>
       <h1 className={styles.title}>Editor's Pick</h1>
-      <MenuPosts withImage />
+      <MenuPosts posts={myPicks} error={myPicksError} withImage />
     </div>
   );
 }
