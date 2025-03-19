@@ -123,6 +123,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
         myPick: myPick,
         title: title,
         category: catSlug,
+        categoryColor: "",
         content: content,
         draft: draft,
         tags: keywords,
