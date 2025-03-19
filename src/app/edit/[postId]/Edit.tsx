@@ -170,6 +170,7 @@ const Edit = ({
         myPick: myPick,
         title: title,
         category: catSlug,
+        categoryColor: blogPost?.data?.categoryColor,
         categoryName: blogPost?.data.categoryName || "",
         content: content,
         draft: draft,
