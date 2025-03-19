@@ -34,7 +34,7 @@ type CreateBlogPostResponse = SuccessResponse | ErrorResponse;
 export async function createBlogPost(
   post: BlogPost
 ): Promise<CreateBlogPostResponse> {
-  const { myPick, category } = post;
+  const { myPick, category, featured } = post;
   //create variable so can pass back id to frontend success return
 
   const postWithDate = { ...post, date: new Date(), editedAt: new Date() };
@@ -64,6 +64,22 @@ export async function createBlogPost(
         await updateDoc(categoryDocRef, updatedCategoryData);
       } else {
         console.log("section does not exist");
+      }
+
+      //handle if featured is true - update featured collection
+      if (featured) {
+        const featuredRef = doc(db, "featured", "featuredPost");
+        const featuredSnapshot = await getDoc(featuredRef);
+        if (featuredSnapshot.exists()) {
+          // remove any previously set post
+          await updateDoc(featuredRef, {
+            post: null,
+          });
+        }
+        // set this new post as the featured one in the featured collection
+        await updateDoc(featuredRef, {
+          post: newId,
+        });
       }
 
       //if mypick is true, add it to mypicks collection, but only if there are fewer than 5.
@@ -108,6 +124,7 @@ export async function createBlogPost(
 
 export async function editPost(postId: string, post: BlogPost) {
   const {
+    featured,
     additionalImages,
     category,
     categoryName,
@@ -127,7 +144,7 @@ export async function editPost(postId: string, post: BlogPost) {
     const postRef = doc(db, "posts", postId);
     const postSnapshot = await getDoc(postRef);
     const prevPost = postSnapshot.data();
-    
+
     if (prevPost) {
       //keep the date consistent
       const { date } = prevPost;
@@ -161,6 +178,26 @@ export async function editPost(postId: string, post: BlogPost) {
       newCategoryName = await getCategoryName(category);
     }
 
+    //check and update featured collection
+    if (prevPost?.featured !== featured) {
+      const featuredRef = doc(db, "featured", "featuredPost");
+      const featuredSnapshot = await getDoc(featuredRef);
+
+      if (featuredSnapshot.exists()) {
+        const prevFeaturedId = featuredSnapshot.data().post || "";
+        //if post id doesn't match previous post id, remove it.
+        if (featured && postId !== prevFeaturedId) {
+          await updateDoc(featuredRef, {
+            post: prevFeaturedId ? arrayRemove(prevFeaturedId) : null,
+          });
+          //add new id
+          await updateDoc(featuredRef, {
+            post: postId,
+          });
+        }
+      }
+    }
+
     //check and update myPick in the myPicks collection
     if (prevPost?.myPick !== myPick) {
       const myPicksRef = doc(db, "myPicks", "picks");
@@ -178,8 +215,8 @@ export async function editPost(postId: string, post: BlogPost) {
         } else {
           //if my pick is false, remove from myPicks
           const updatedPicks = {
-            posts: arrayRemove(postId)
-          }
+            posts: arrayRemove(postId),
+          };
           await updateDoc(myPicksRef, updatedPicks);
         }
       } else {
@@ -189,6 +226,7 @@ export async function editPost(postId: string, post: BlogPost) {
 
     if (postRef) {
       await updateDoc(postRef, {
+        featured,
         myPick,
         additionalImages,
         coverImage,
