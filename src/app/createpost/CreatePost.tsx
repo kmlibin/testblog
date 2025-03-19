@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./createPost.module.css";
 import { useRouter } from "next/navigation";
 import "react-quill/dist/quill.snow.css";
@@ -28,6 +28,7 @@ type ImageFile = {
 
 const createPost = ({ categories, error }: CreatePostProps) => {
   const router = useRouter();
+  const [postSlug, setPostSlug]= useState<string>("")
   const [featured, setFeatured] = useState<boolean>(false);
   const [myPick, setMyPick] = useState<boolean>(false);
   const [modalMessage, setModalMessage] = useState<string>("");
@@ -42,6 +43,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [draft, setDraft] = useState<boolean>(false);
   const [newPostId, setNewPostId] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string>("")
 
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
   const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
@@ -95,7 +97,6 @@ const createPost = ({ categories, error }: CreatePostProps) => {
       }
     });
   };
-
   //checkbox for my pick
   const handleMyPickChange = () => {
     setMyPick((prev) => !prev);
@@ -135,9 +136,11 @@ const createPost = ({ categories, error }: CreatePostProps) => {
       const response = await createBlogPost(post);
       //if successful
       if (response.error === false) {
-        const { message, error, id } = response;
+        
+        const { message, error, id, slug } = response;
         setLoading(false);
         setSuccess(true);
+        setPostSlug(slug ? slug : "/")
         setNewPostId(id);
         setModalMessage(message);
         setShowModal(true);
@@ -172,11 +175,10 @@ const createPost = ({ categories, error }: CreatePostProps) => {
   const closeModal = () => {
     setShowModal(false);
     if (success == true && newPostId) {
-      router.push(paths.viewSinglePostPage(newPostId));
+      router.push(paths.viewSinglePostPage(postSlug, newPostId));
     }
   };
 
-  console.log(catSlug, title, content, coverImage, additionalImages, keywords);
   return (
     <div className={styles.container}>
       <Loading label="Adding blog to database..." isLoading={loading} />
