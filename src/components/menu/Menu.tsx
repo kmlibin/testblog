@@ -3,51 +3,88 @@ import styles from "./menu.module.css";
 import Link from "next/link";
 import Image from "next/image";
 import MenuPosts from "../menuPosts/MenuPosts";
-import { getPicks } from "@/app/actions/myPicks";
+import { getPicks } from "@/app/firebase/queries/picksQueries";
+import { getPopularPosts } from "@/app/firebase/queries/blogPostQueries";
+import { BlogPostWithId } from "@/app/types";
 
+export  function Menu() {
+  let myPicks: BlogPostWithId[] | null = null;
+  let myPicksError: string | null = null;
+  let popularPosts: BlogPostWithId[] | null = null;
+  let popularPostsError: string | null = null;
 
- export async function Menu ()  {
-  let myPicks: any = null
-  let myPicksError: any = null
+  // const getPosts = await getPopularPosts();
+  // if (getPosts.error) {
+  //   popularPostsError = getPosts.error;
+  // } else {
+  //   popularPosts = getPosts.data;
+  // }
 
-  const getMyPicks = await getPicks();
-  if (getMyPicks.error) {
-    myPicksError = getMyPicks.error;
-  } else {
-    myPicks = getMyPicks.data;
-  }
+  // // console.log('popular', popularPosts)
 
-  console.log(myPicks)
+  // const getMyPicks = await getPicks();
+  // if (getMyPicks.error) {
+  //   myPicksError = getMyPicks.error;
+  // } else {
+  //   myPicks = getMyPicks.data;
+  // }
+
+  // console.log(myPicks)
 
   return (
     <div className={styles.container}>
       <h2 className={styles.subtitle}>{"What's Hot"}</h2>
       <h1 className={styles.title}>Most Popular</h1>
-   <MenuPosts />
+      <MenuPosts withImage={false} />
       <h2 className={styles.subtitle}>Discover By Topic</h2>
       <h1 className={styles.title}>Categories</h1>
-    <div className={styles.categoryList}>
-      <Link href="/blog?cat=coding" className={`${styles.categoryItem} ${styles.coding}`}> Coding
-      </Link>
+      <div className={styles.categoryList}>
+        <Link
+          href="/blog?cat=coding"
+          className={`${styles.categoryItem} ${styles.coding}`}
+        >
+          {" "}
+          Coding
+        </Link>
 
-      <Link href="/blog?cat=travel" className={`${styles.categoryItem} ${styles.travel}`}> Travel
-      </Link>
+        <Link
+          href="/blog?cat=travel"
+          className={`${styles.categoryItem} ${styles.travel}`}
+        >
+          {" "}
+          Travel
+        </Link>
 
-      <Link href="/blog?cat=food" className={`${styles.categoryItem} ${styles.food}`}> Cooking
-      </Link>
+        <Link
+          href="/blog?cat=food"
+          className={`${styles.categoryItem} ${styles.food}`}
+        >
+          {" "}
+          Cooking
+        </Link>
 
-      <Link href="/blog?cat=gardening" className={`${styles.categoryItem} ${styles.gardening}`}> Gardening
-      </Link>
+        <Link
+          href="/blog?cat=gardening"
+          className={`${styles.categoryItem} ${styles.gardening}`}
+        >
+          {" "}
+          Gardening
+        </Link>
 
-      <Link href="/blog?cat=other" className={`${styles.categoryItem} ${styles.other}`}> Other
-      </Link>
-    </div>
+        <Link
+          href="/blog?cat=other"
+          className={`${styles.categoryItem} ${styles.other}`}
+        >
+          {" "}
+          Other
+        </Link>
+      </div>
 
       <h2 className={styles.subtitle}>Chosen by the editor</h2>
       <h1 className={styles.title}>Editor's Pick</h1>
       <MenuPosts withImage />
     </div>
   );
-};
+}
 
 export default Menu;
