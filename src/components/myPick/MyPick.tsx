@@ -1,23 +1,36 @@
 import React from "react";
-import styles from './myPick.module.css'
+import styles from "./myPick.module.css";
 
 type MyPickProps = {
-myPick: boolean;
-handleCheckboxChange: () => void;
+  toggle: boolean;
+  handleCheckboxChange: () => void;
+  type: string;
 };
 
-const MyPick = ({myPick, handleCheckboxChange}: MyPickProps) => {
+const MyPick = ({ toggle, type, handleCheckboxChange }: MyPickProps) => {
   return (
     <div className={styles.myPickContainer}>
-    {!myPick ? (
-        <button type="button" className={styles.addPick} onClick={handleCheckboxChange}>
-          Add to My Picks
+      {!toggle ? (
+        <button
+          type="button"
+          className={styles.addPick}
+          onClick={handleCheckboxChange}
+        >
+          {type === "myPick" ? "Add to My Picks" : "Make Featured Post"}
         </button>
       ) : (
         <div className={styles.pickedWrapper}>
-          <span className={styles.pickedChip}>✓ My Pick</span>
-          <button type="button" className={styles.removePick} onClick={handleCheckboxChange}>
-            Remove from My Picks
+          <span className={styles.pickedChip}>
+            ✓ {type === "myPick" ? "My Pick" : "Featured"}
+          </span>
+          <button
+            type="button"
+            className={styles.removePick}
+            onClick={handleCheckboxChange}
+          >
+            {type === "myPick"
+              ? "Remove from My Picks"
+              : "Remove as Featured Post"}
           </button>
         </div>
       )}
