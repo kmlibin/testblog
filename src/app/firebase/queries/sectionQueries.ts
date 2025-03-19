@@ -35,13 +35,14 @@ export async function getCategories(): Promise<CategoryResult> {
   }
 }
 
-export async function getCategoryName(category: string) {
+export async function getCategoryNameAndColor(category: string) {
       //get categoryName from doc id (category is passed as the id, not the name)
       const categoryDocRef = doc(db, "categories", category);
       const categoryDocSnapshot = await getDoc(categoryDocRef);
       if (categoryDocSnapshot.exists()) {
         const categoryData = categoryDocSnapshot.data();
-        return categoryData.name;
+        return {name: categoryData.name, color: categoryData.color};
   
       }
+      return null
 }
