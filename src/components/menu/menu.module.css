@@ -14,27 +14,6 @@
 }
 
 
-.travel {
-  background-color: #ff7857;
-}
-
-.food {
-  background-color: #ffb14f;
-}
-
-.coding {
-  background-color: #7fb881;
-}
-
-.other {
-  background-color: #ff7887;
-}
-
-.gardening {
-  background-color: aquamarine;
-}
-
-
 .categoryList{
   margin-top: 35px;
   margin-bottom: 60px;
@@ -48,6 +27,11 @@
   padding: 10px 25px;
   border-radius: 10px;
   font-size: 14px;
+
+}
+
+.categoryItem::first-letter {
+  text-transform: capitalize;
 }
 
 @media screen and (max-width: 1024px) {
