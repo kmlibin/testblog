@@ -18,10 +18,18 @@ import { db } from "@/app/firebase/config";
 import { BlogPost, Category } from "@/app/types";
 import { BlogPostWithId } from "@/app/types";
 
-type SingleBlogPostResult = { data: BlogPostWithId | null; error: string | null };
-type MultipleBlogPostResult = { data: BlogPostWithId[] | null; error: string | null };
+type SingleBlogPostResult = {
+  data: BlogPostWithId | null;
+  error: string | null;
+};
+type MultipleBlogPostResult = {
+  data: BlogPostWithId[] | null;
+  error: string | null;
+};
 
-export async function getBlogPostById(id: string): Promise<SingleBlogPostResult> {
+export async function getBlogPostById(
+  id: string
+): Promise<SingleBlogPostResult> {
   const postRef = doc(db, "posts", id);
 
   try {
@@ -75,24 +83,30 @@ export async function getPopularPosts(): Promise<MultipleBlogPostResult> {
     }
 
     // format each post
-    const popularPosts: BlogPostWithId[] = postsSnapshot.docs.map((doc) => {
-      const postData = doc.data() as BlogPost;
 
-      return {
-        id: doc.id,
-        data: {
-          ...postData,
-          date:
-            postData.date instanceof Timestamp
-              ? postData.date.toDate().toISOString()
-              : null,
-          editedAt:
-            postData.editedAt instanceof Timestamp
-              ? postData.editedAt.toDate().toISOString()
-              : null,
-        },
-      };
-    });
+    const popularPosts: BlogPostWithId[] | null = postsSnapshot.docs
+      .map((doc) => {
+        const postData = doc.data() as BlogPost;
+        //don't return it if it's a draft
+        if (postData.draft) {
+          return null;
+        }
+        return {
+          id: doc.id,
+          data: {
+            ...postData,
+            date:
+              postData.date instanceof Timestamp
+                ? postData.date.toDate().toISOString()
+                : null,
+            editedAt:
+              postData.editedAt instanceof Timestamp
+                ? postData.editedAt.toDate().toISOString()
+                : null,
+          },
+        };
+      })
+      .filter((post): post is BlogPostWithId => post !== null);
 
     return { data: popularPosts, error: null };
   } catch (error: any) {
