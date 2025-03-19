@@ -4,7 +4,6 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore/lite";
 import { getStorage } from "firebase/storage";
 
-console.log('API Key:', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
 
 
 // Your web app's Firebase configuration
