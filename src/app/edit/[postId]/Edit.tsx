@@ -16,6 +16,8 @@ import EditAddImage from "@/app/edit/[postId]/editAddImages";
 import { editPost } from "@/app/actions/posts";
 import paths from "@/paths";
 import MyPick from "@/components/myPick/MyPick";
+import generateSlug from "@/app/utils/generateSlug";
+import DraftSaveButtons from "@/components/draftSaveButtons/draftSaveButtons";
 
 type EditPostProps = {
   categories: CategoryWithId[] | null;
@@ -39,6 +41,9 @@ const Edit = ({
   const [myPick, setMyPick] = useState<boolean>(
     blogPost?.data?.myPick || false
   );
+  const [featured, setFeatured] = useState<boolean>(
+    blogPost?.data?.featured || false
+  );
   const [modalMessage, setModalMessage] = useState<string>("");
   const [postSlug, setPostSlug] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -60,12 +65,13 @@ const Edit = ({
   const [draft, setDraft] = useState<boolean>(blogPost?.data?.draft || false);
   const [postId, setPostId] = useState<string>(blogPost?.id || "");
 
-  useEffect(() => {
-    const initialCategoryId =
-      categories?.find((cat) => cat.name === blogPost?.data.categoryName)?.id ||
-      "";
-    setCatSlug(initialCategoryId);
-  }, [blogPost, categories]);
+  //get initial category
+  // useEffect(() => {
+  //   const initialCategoryId =
+  //     categories?.find((cat) => cat.name === blogPost?.data.categoryName)?.id ||
+  //     "";
+  //   setCatSlug(initialCategoryId);
+  // }, [blogPost, categories]);
 
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
   const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
@@ -118,17 +124,13 @@ const Edit = ({
     });
   };
 
-  //creates the slug
-  function generateSlug(title: string) {
-    return title
-      .toLowerCase()
-      .replace(/ /g, "-")
-      .replace(/[^\w-]+/g, "");
-  }
-
-  //checkbox
-  const handleCheckboxChange = () => {
+  //checkbox for my pick
+  const handleMyPickChange = () => {
     setMyPick((prev) => !prev);
+  };
+  //box for featured
+  const handleFeaturedChange = () => {
+    setFeatured((prev) => !prev);
   };
 
   //edits blog post in firebase
@@ -164,6 +166,7 @@ const Edit = ({
 
       //create object that now includes the urls
       const post = {
+        featured: featured,
         myPick: myPick,
         title: title,
         category: catSlug,
@@ -220,7 +223,7 @@ const Edit = ({
       router.push(paths.viewEditedSinglePostPage(postSlug, postId));
     }
   };
-  console.log(myPick);
+
   //if blogpost error, return and display error on frontend
   if (blogPostError) {
     return <div className={styles.error}>Error fetching Post...</div>;
@@ -283,22 +286,17 @@ const Edit = ({
           />
         </div>
         <Keywords keywords={keywords} setKeywords={setKeywords} />
-        <MyPick myPick={myPick} handleCheckboxChange={handleCheckboxChange} />
-        <div className={styles.buttons}>
-          <button type="submit" className={styles.publish} disabled={loading}>
-            Publish Changes
-            <MdUpload />
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            onClick={() => setDraft(true)}
-            className={styles.draft}
-          >
-            Save as Draft
-            <FaRegSave />
-          </button>
-        </div>
+        <MyPick
+          type="featured"
+          toggle={featured}
+          handleCheckboxChange={handleFeaturedChange}
+        />
+        <MyPick
+          type="myPick"
+          toggle={myPick}
+          handleCheckboxChange={handleMyPickChange}
+        />
+        <DraftSaveButtons type="edit" loading={loading} setDraft={setDraft} />
       </form>
       <Modal show={showModal} onClose={closeModal}>
         <div>
