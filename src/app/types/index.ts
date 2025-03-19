@@ -34,6 +34,7 @@ export interface Category {
 
 export interface BlogPost {
   featured: boolean;
+  categoryColor: any;
   myPick: boolean;
   additionalImages?: ImagePath[];
   category: string;
@@ -53,18 +54,19 @@ export interface BlogPostWithId {
   id: string;
   data: {
     featured: boolean;
+    categoryColor: string;
     myPick: boolean;
     additionalImages?: ImagePath[];
     category: string;
     categoryName?: string | undefined;
     content: string;
     coverImage?: ImagePath;
-    date?: string| null | Date;
+    date: any;
     draft: boolean;
     slug: string;
     tags: string[];
     title: string;
-    editedAt?: string | null | Date;
+    editedAt: any;
     views: number;
   };
 }
