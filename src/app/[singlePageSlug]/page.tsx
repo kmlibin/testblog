@@ -1,11 +1,9 @@
 import React from "react";
-import styles from "./singlePage.module.css";
-import Menu from "@/components/menu/Menu";
-import Image from "next/image";
 import { BlogPostWithId } from "../types";
 import { getBlogPostById } from "../firebase/queries/blogPostQueries";
-import { addCount } from "../actions/posts";
 import SinglePost from "./SinglePost";
+import styles from "./singlePage.module.css";
+import { addCount } from "../actions/posts";
 
 type Props = {
   searchParams: {
@@ -16,24 +14,30 @@ type Props = {
   };
 };
 
-const page = async ({ searchParams, params }: Props) => {
-  //get id from search params, use that to search for the post. return post.
+async function page({ searchParams, params }: Props) {
   const postId = searchParams.id;
   let blogPost: BlogPostWithId | null = null;
   let blogPostError: string | null = null;
-  //add to count
-  await addCount(searchParams.id);
 
-  //fetch blogs
-  const blogPostResult = await getBlogPostById(postId);
 
-  if (blogPostResult.error) {
-    blogPostError = blogPostResult.error;
-  } else {
-    blogPost = blogPostResult.data;
+  try {
+    //add to count
+    await addCount(postId);
+    const blogPostResult = await getBlogPostById(postId);
+    if (blogPostResult.error) {
+      blogPostError = blogPostResult.error;
+    } else {
+      blogPost = blogPostResult.data;
+    }
+  } catch (error) {
+    blogPostError = "Error fetching post";
   }
 
-  return <SinglePost blogPost={blogPost} blogPostError={blogPostError} />;
-};
+  return (
+    <div className={styles.container}>
+      <SinglePost blogPost={blogPost} blogPostError={blogPostError} />
+    </div>
+  );
+}
 
 export default page;
