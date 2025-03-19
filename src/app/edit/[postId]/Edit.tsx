@@ -220,7 +220,7 @@ const Edit = ({
   const closeModal = () => {
     setShowModal(false);
     if (success == true && postSlug) {
-      router.push(paths.viewEditedSinglePostPage(postSlug, postId));
+      router.push(paths.viewSinglePostPage(postSlug, postId));
     }
   };
 
