@@ -19,7 +19,8 @@ const MenuPosts = ({ withImage, error, posts }: MenuPostsProps) => {
     <div className={styles.items}>
       {posts?.map((post) => (
         <Link
-          href={paths.viewSinglePostPage(post.data.slug, post.id)}
+          href={paths.viewSinglePostPage(post.data.slug, "false", post.id)}
+          key={post.id}
           className={styles.item}
         >
           {withImage && (

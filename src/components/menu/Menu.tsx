@@ -8,6 +8,7 @@ import { getPopularPosts } from "@/app/firebase/queries/blogPostQueries";
 import { BlogPostWithId } from "@/app/types";
 import { CategoryWithId } from "@/app/types";
 import paths from "@/paths";
+import CategoryList from "../categoryList/CategoryList";
 
 type MenuProps = {
   myPicks: BlogPostWithId[] | null;
@@ -36,19 +37,20 @@ export function Menu({
       />
       <h2 className={styles.subtitle}>Discover By Topic</h2>
       <h1 className={styles.title}>Categories</h1>
-      <div className={styles.categoryList}>
-        {categories?.map((cat) => (
-            <Link
-          href={paths.viewCategoryPage(cat.name, cat.id)}
-          className={styles.categoryItem}
-          style={{backgroundColor: cat.color}}
-        >
-          
-          {cat.name}
-        </Link>
-        ))}
-      
 
+      {/*  categories */}
+      <div className={styles.categoryList}>
+        {categoriesError && "Error fetching categories..."}
+        {categories?.map((cat) => (
+          <Link
+            key={cat.id}
+            href={paths.viewCategoryPage(cat.name, cat.id)}
+            className={styles.categoryItem}
+            style={{ backgroundColor: cat.color }}
+          >
+            {cat.name}
+          </Link>
+        ))}
       </div>
 
       <h2 className={styles.subtitle}>Chosen by the editor</h2>
