@@ -23,6 +23,7 @@ interface SuccessResponse {
   message: string;
   id: string;
   slug: string;
+  draft: string;
 }
 
 interface ErrorResponse {
@@ -35,41 +36,56 @@ type CreateBlogPostResponse = SuccessResponse | ErrorResponse;
 export async function createBlogPost(
   post: BlogPost
 ): Promise<CreateBlogPostResponse> {
-  const { myPick, category, featured, slug } = post;
+  const { myPick, category, featured, slug, draft } = post;
   //create variable so can pass back id to frontend success return
 
   const postWithDate = { ...post, date: new Date(), editedAt: new Date() };
   let newId;
 
-
   try {
     //get categoryName first so it can be attached to the post
     const response = await getCategoryNameAndColor(category);
-    //add the post to the db
-    const newPost = await addDoc(collection(db, "posts"), {
-      ...postWithDate,
-      categoryName : response?.name,
-      categoryColor: response?.color,
-    });
+
+    //add the post to the db. if draft is false, add it to posts coll. if true, add it to drafts coll
+    const newPost = !draft
+      ? await addDoc(collection(db, "posts"), {
+          ...postWithDate,
+          categoryName: response?.name,
+          categoryColor: response?.color,
+        })
+      : await addDoc(collection(db, "drafts"), {
+          ...postWithDate,
+          categoryName: response?.name,
+          categoryColor: response?.color,
+        });
 
     //if new post is successful, get id variable,
     if (newPost.id) {
       newId = newPost.id;
-      
 
-      // add it to the appropriate category
+      // add it to the appropriate category. if it's a draft, save it under drafts. published, save it under posts
       const categoryDocRef = doc(db, "categories", category);
       const categoryDocSnapshot = await getDoc(categoryDocRef);
+      let updatedCategoryData;
       if (categoryDocSnapshot.exists()) {
-        const updatedCategoryData = {
-          posts: arrayUnion(newId),
-        };
+        draft
+          ? (updatedCategoryData = {
+              drafts: arrayUnion(newId),
+            })
+          : (updatedCategoryData = {
+              posts: arrayUnion(newId),
+            });
+
         await updateDoc(categoryDocRef, updatedCategoryData);
       } else {
         console.log("section does not exist");
       }
 
       //handle if featured is true - update featured collection
+      if (featured && draft) {
+        return { error: true, message: "draft can't be featured" };
+      }
+
       if (featured) {
         const featuredRef = doc(db, "featured", "featuredPost");
         const featuredSnapshot = await getDoc(featuredRef);
@@ -86,6 +102,10 @@ export async function createBlogPost(
       }
 
       //if mypick is true, add it to mypicks collection, but only if there are fewer than 5.
+      if (myPick && draft) {
+        return { error: true, message: "draft can't be a pick" };
+      }
+
       if (myPick) {
         const myPicksRef = doc(db, "myPicks", "picks");
         const myPicksDocSnapshot = await getDoc(myPicksRef);
@@ -122,12 +142,12 @@ export async function createBlogPost(
     error: false,
     message: "Successfully added post to database!",
     id: newId ? newId : "/",
+    draft: draft ? "true" : "false",
     slug: slug,
-
   };
 }
 
-export async function editPost(postId: string, post: BlogPost) {
+export async function editPost(postId: string, post: BlogPost, prevCollection: string) {
   const {
     featured,
     additionalImages,
@@ -144,11 +164,11 @@ export async function editPost(postId: string, post: BlogPost) {
   } = post;
   let postDate;
   let newCategoryName = "Other";
-  let newCategoryColor = "#7A5DC7"
-
+  let newCategoryColor = "#7A5DC7";
 
   try {
-    const postRef = doc(db, "posts", postId);
+//get previous collection
+    const postRef = doc(db, prevCollection, postId);
     const postSnapshot = await getDoc(postRef);
     const prevPost = postSnapshot.data();
 
@@ -156,17 +176,26 @@ export async function editPost(postId: string, post: BlogPost) {
       //keep the date consistent
       const { date } = prevPost;
       postDate = date;
+
+      //checks if draft state has changed, if it has, it deletes from the previous collection it was in
+      if (prevPost.draft !== draft) {
+        await deleteDoc(postRef); 
+      }
+
       // handle category change
-      if (prevPost.category !== category) {
+      if (prevPost.category !== category || prevPost.draft != draft) {
         // get category document and snapshot of the current state
-        const prevPostDocRef = doc(db, "categories", prevPost.category);
-        const prevPostDocSnapshot = await getDoc(prevPostDocRef);
-        //remove from previous category
-        if (prevPostDocSnapshot.exists()) {
-          const updatedCategoryData = {
-            posts: arrayRemove(postId),
-          };
-          await updateDoc(prevPostDocRef, updatedCategoryData);
+        const previousCategoryRef = doc(db, "categories", prevPost.category);
+        const prevCategorySnapshot = await getDoc(previousCategoryRef);
+
+        //if it's a post, remove from previous category
+        //if it's a draft, remove it from it's previous category
+        if (prevCategorySnapshot.exists()) {
+          let removeCategoryData = prevPost.draft
+            ? { drafts: arrayRemove(postId) }
+            : { posts: arrayRemove(postId) };
+
+          await updateDoc(previousCategoryRef, removeCategoryData);
         }
       }
     }
@@ -174,21 +203,21 @@ export async function editPost(postId: string, post: BlogPost) {
     const newCategoryRef = doc(db, "categories", category);
 
     if (newCategoryRef) {
-      const updateCategoryData = {
-        posts: arrayUnion(postId),
-      };
+      let addCategoryData = draft
+      ? { drafts: arrayUnion(postId) }
+      : { posts: arrayUnion(postId) };
 
-      await updateDoc(newCategoryRef, updateCategoryData);
+    await updateDoc(newCategoryRef, addCategoryData);
     }
     //get new categoryName
     if (category) {
-       const response = await getCategoryNameAndColor(category);
-       newCategoryName = response?.name
-       newCategoryColor = response?.color
+      const response = await getCategoryNameAndColor(category);
+      newCategoryName = response?.name;
+      newCategoryColor = response?.color;
     }
 
     //check and update featured collection
-    if (prevPost?.featured !== featured) {
+    if (!draft && prevPost?.featured !== featured ) {
       const featuredRef = doc(db, "featured", "featuredPost");
       const featuredSnapshot = await getDoc(featuredRef);
 
@@ -208,7 +237,7 @@ export async function editPost(postId: string, post: BlogPost) {
     }
 
     //check and update myPick in the myPicks collection
-    if (prevPost?.myPick !== myPick) {
+    if (!draft && prevPost?.myPick !== myPick) {
       const myPicksRef = doc(db, "myPicks", "picks");
       const myPicksDocSnapshot = await getDoc(myPicksRef);
       if (myPicksDocSnapshot.exists()) {
@@ -233,25 +262,25 @@ export async function editPost(postId: string, post: BlogPost) {
       }
     }
 
-    if (postRef) {
-      await updateDoc(postRef, {
-        featured,
-        myPick,
-        additionalImages,
-        coverImage,
-        content,
-        category,
-        categoryName: newCategoryName,
-        categoryColor: newCategoryColor,
-        date: postDate,
-        editedAt: new Date(),
-        draft,
-        tags,
-        title,
-        views,
-        slug,
-      });
-    }
+    const newCollection = draft ? "drafts" : "posts";
+    const newPostRef = doc(db, newCollection, postId);
+    await updateDoc(newPostRef, {
+      featured,
+      myPick,
+      additionalImages,
+      coverImage,
+      content,
+      category,
+      categoryName: newCategoryName,
+      categoryColor: newCategoryColor,
+      date: postDate,
+      editedAt: new Date(),
+      draft,
+      tags,
+      title,
+      views,
+      slug,
+    });
   } catch (error: any) {
     console.log(error);
     if (error.code === "permission-denied") {
