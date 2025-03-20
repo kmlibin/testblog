@@ -8,8 +8,8 @@ const paths = {
   createPostPage() {
     return "/createpost";
   },
-  viewSinglePostPage(singlePageSlug: string, postId: string) {
-    return `/${singlePageSlug}?id=${postId}`
+  viewSinglePostPage(singlePageSlug: string, draft: string, postId: string) {
+    return `/${singlePageSlug}?draft=${draft}&id=${postId}`
   },
   viewAllPostsPage() {
     return `/allposts`;
