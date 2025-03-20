@@ -34,17 +34,22 @@
   font-size: 40px;
 }
 
+.postTitle::first-letter {
+  text-transform: capitalize;
+}
+
 .postDescription {
   font-size: 20px;
   font-weight: 300;
   color: var(--softTextColor);
 }
 
-.button {
+.featuredLink {
   padding: 16px 20px;
   border: none;
   border-radius: 5px;
   width: max-content;
+  background-color: aqua;
 }
 
 @media screen and (max-width: 1280px) {

@@ -2,43 +2,44 @@
 
 }
 
-.title {
-   margin: 50px 0px; 
-}
-
-.categories {
+.categoryList{
+    margin-top: 35px;
+    margin-bottom: 60px;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     gap: 20px;
-}
-
-.category {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-transform: capitalize;
-    width: 15%;
-    height: 80px;
-    justify-content: center;
+    width: 100%
+  
+  }
+  
+  .categoryItem {
+    padding: 20px 35px;
     border-radius: 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap:20px;
+    font-size: 16px;
+    width: 15%;
+  
+  }
+
+  .catTitle {
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+  
+  .catTitle::first-letter {
+    text-transform: capitalize;
+  }
+
+.title {
+   margin: 50px 0px; 
 }
 
-.category.style{
-    background-color: #57c4ff31;
-}
-.category.coding{
-    background-color: #da85c731;
-}
-.category.food{
-    background-color: #7fb88133;
-}
-.category.garden{
-    background-color: #ff795736;
-}
-.category.other{
-    background-color: #ffb04f45;
-}
+
 
 
 .image{
@@ -46,26 +47,21 @@
 }
 
 
-@media screen and (max-width: 1280px) {
-    .category{
-        width: 20%;
-    }
-}
 
-@media screen and (max-width: 1024px) {
-    .category{
+@media screen and (max-width: 1300px) {
+    .categoryItem{
         width: 25%;
     }
 }
 
 @media screen and (max-width: 768px) {
-    .category{
+    .categoryItem{
         width: 45%;
     }
 }
 
 @media screen and (max-width: 640px) {
-    .category{
+    .categoryItem{
         width: 100%;
     }
 }
