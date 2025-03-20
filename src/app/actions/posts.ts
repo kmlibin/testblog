@@ -165,7 +165,7 @@ export async function editPost(postId: string, post: BlogPost, prevCollection: s
   let postDate;
   let newCategoryName = "Other";
   let newCategoryColor = "#7A5DC7";
-
+console.log("prevCollection", prevCollection)
   try {
 //get previous collection
     const postRef = doc(db, prevCollection, postId);
@@ -263,6 +263,7 @@ export async function editPost(postId: string, post: BlogPost, prevCollection: s
     }
 
     const newCollection = draft ? "drafts" : "posts";
+    console.log('new collectin', newCollection)
     const newPostRef = doc(db, newCollection, postId);
     await updateDoc(newPostRef, {
       featured,
