@@ -44,6 +44,9 @@ const Edit = ({
   const [featured, setFeatured] = useState<boolean>(
     blogPost?.data?.featured || false
   );
+  const [prevCollection, setPrevCollection] = useState<string>(
+    blogPost?.data?.draft ? "drafts" : "posts"
+  );
   const [modalMessage, setModalMessage] = useState<string>("");
   const [postSlug, setPostSlug] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -65,13 +68,6 @@ const Edit = ({
   const [draft, setDraft] = useState<boolean>(blogPost?.data?.draft || false);
   const [postId, setPostId] = useState<string>(blogPost?.id || "");
 
-  //get initial category
-  // useEffect(() => {
-  //   const initialCategoryId =
-  //     categories?.find((cat) => cat.name === blogPost?.data.categoryName)?.id ||
-  //     "";
-  //   setCatSlug(initialCategoryId);
-  // }, [blogPost, categories]);
 
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
   const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
@@ -98,7 +94,7 @@ const Edit = ({
       file: file,
     });
   };
-
+console.log(prevCollection)
   //uploads for array of images
   const handleAdditionalImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -182,7 +178,7 @@ const Edit = ({
       };
 
       //call server action, editpost
-      const response = await editPost(postId, post);
+      const response = await editPost(postId, post, prevCollection);
       //if successful
       if (response.error === false) {
         const { message, slug } = response;
@@ -221,7 +217,7 @@ const Edit = ({
   const closeModal = () => {
     setShowModal(false);
     if (success == true && postSlug) {
-      router.push(paths.viewSinglePostPage(postSlug, postId));
+      router.push(paths.viewSinglePostPage(postSlug, "true", postId));
     }
   };
 
