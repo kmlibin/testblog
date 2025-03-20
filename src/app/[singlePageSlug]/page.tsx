@@ -11,6 +11,7 @@ import { CategoryWithId } from "../types";
 type Props = {
   searchParams: {
     id: string;
+    draft: string;
   };
   params: {
     singlePageSlug: string;
@@ -28,6 +29,8 @@ async function page({ searchParams, params }: Props) {
   let categoriesError: string | null = null;
   let categories: CategoryWithId[] | null = null;
 
+
+  console.log(searchParams)
   //get categories for menu
   const categoryResult = await getCategories();
   if (categoryResult.error) {
@@ -52,8 +55,9 @@ async function page({ searchParams, params }: Props) {
     myPicks = getMyPicks.data;
   }
 
+
   //get blogpost
-  const blogPostResult = await getBlogPostById(postId);
+  const blogPostResult = await getBlogPostById(postId, searchParams.draft);
   if (blogPostResult.error) {
     blogPostError = blogPostResult.error;
   } else {
