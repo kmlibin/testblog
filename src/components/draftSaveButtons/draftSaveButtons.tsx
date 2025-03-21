@@ -12,7 +12,7 @@ type Props = {
 const DraftSaveButtons = ({loading, setDraft, type}: Props) => {
   return (
     <div className={styles.buttons}>
-    <button type="submit" className={styles.publish} disabled={loading}>
+    <button type="submit" className={styles.publish} disabled={loading} onClick={() => setDraft(false)}>
       {type==="create" ? "Create Post" : "Publish Changes"}
       <MdUpload />
     </button>
