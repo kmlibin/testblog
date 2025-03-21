@@ -32,7 +32,7 @@ const Card = ({post}:CardProps) => {
           <span className={styles.date}>{formattedDate} - </span>
           <span className={styles.category}>{post.data.categoryName}</span>
         </div>
-        <Link href={paths.viewSinglePostPage(post.data.slug, post.id)}>
+        <Link href={paths.viewSinglePostPage(post.data.slug, post.id, "false")}>
           <h1 className={styles.title}>
            {post.data.title}
           </h1>
@@ -40,7 +40,7 @@ const Card = ({post}:CardProps) => {
         <p className={styles.desc}>
           {descriptionText}
         </p>
-        <Link href={paths.viewSinglePostPage(post.data.slug, post.id)} className={styles.link}>
+        <Link href={paths.viewSinglePostPage(post.data.slug, post.id, "false"  )} className={styles.link}>
           Read More
         </Link>
       </div>

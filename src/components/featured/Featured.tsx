@@ -39,7 +39,7 @@ const Featured = ({ featured, featuredError }: FeaturedProps) => {
           <h1 className={styles.postTitle}>{featured?.data.title}</h1>
           <p className={styles.postDescription}>{descriptionText}</p>
           <Link
-            href={paths.viewSinglePostPage(featured?.data?.slug, featured?.id)}
+            href={paths.viewSinglePostPage(featured?.data?.slug,  featured?.id, "false",)}
             className={styles.featuredLink}
           >
             Read More

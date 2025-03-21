@@ -177,7 +177,7 @@ const createPost = ({ categories, error }: CreatePostProps) => {
   const closeModal = () => {
     setShowModal(false);
     if (success == true && newPostId) {
-      router.push(paths.viewSinglePostPage(postSlug, returnedStatus, newPostId));
+      router.push(paths.viewSinglePostPage(postSlug, newPostId, returnedStatus, ));
     }
   };
 
