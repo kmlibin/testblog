@@ -3,10 +3,10 @@ import React from "react";
 import Menu from "@/components/menu/Menu";
 import styles from "./singlePage.module.css";
 import Image from "next/image";
-import { BlogPostWithId, BlogPost, CategoryWithId } from "../types";
+import { BlogPostWithId, CategoryWithId } from "@/app/types";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
-import { formatDate } from "../utils/formatDate";
+import { formatDate } from "@/app/utils/formatDate";
 
 type SinglePostProps = {
   blogPostError: string | null;
@@ -32,6 +32,8 @@ const SinglePost = ({
   if (blogPostError || !blogPost) {
     return <div className={styles.error}>Error fetching Post...</div>;
   }
+
+  console.log(blogPost)
   const {
     title,
     content,
@@ -54,7 +56,12 @@ const SinglePost = ({
       <div className={styles.infoContainer}>
         <div className={styles.textContainer}>
           <h1 className={styles.title}>{title}</h1>
-          <h4 className={styles.catName} style={{backgroundColor: `${categoryColor}`}}>{categoryName}</h4>
+          <h4
+            className={styles.catName}
+            style={{ backgroundColor: `${categoryColor}` }}
+          >
+            {categoryName}
+          </h4>
           <div className={styles.user}>
             <div className={styles.userImageContainer}>
               <Image src="/p1.jpeg" alt="" fill className={styles.userImage} />

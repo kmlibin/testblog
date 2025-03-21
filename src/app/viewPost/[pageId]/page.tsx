@@ -1,13 +1,12 @@
 import React from "react";
-import { BlogPostWithId } from "../types";
-import { getBlogPostById } from "../firebase/queries/blogPostQueries";
+import { getBlogPostById } from "@/app/firebase/queries/blogPostQueries";
 import SinglePost from "./SinglePost";
 import styles from "./singlePage.module.css";
-import { addCount } from "../actions/posts";
-import { getPopularPosts } from "../firebase/queries/blogPostQueries";
-import { getPicks } from "../firebase/queries/picksQueries";
-import { getCategories } from "../firebase/queries/sectionQueries";
-import { CategoryWithId } from "../types";
+import { addCount } from "@/app/actions/posts";
+import { getPopularPosts } from "@/app/firebase/queries/blogPostQueries";
+import { getPicks } from "@/app/firebase/queries/picksQueries";
+import { getCategories } from "@/app/firebase/queries/sectionQueries";
+import { CategoryWithId, BlogPostWithId } from "@/app/types";
 type Props = {
   searchParams: {
     id: string;
@@ -15,11 +14,13 @@ type Props = {
   };
   params: {
     singlePageSlug: string;
+    pageId: string;
   };
 };
 
 async function page({ searchParams, params }: Props) {
-  const postId = searchParams.id;
+  const postId = params.pageId;
+  console.log(params)
   let blogPost: BlogPostWithId | null = null;
   let blogPostError: string | null = null;
   let myPicks: BlogPostWithId[] | null = null;
@@ -29,8 +30,7 @@ async function page({ searchParams, params }: Props) {
   let categoriesError: string | null = null;
   let categories: CategoryWithId[] | null = null;
 
-
-  console.log(searchParams)
+  console.log(searchParams);
   //get categories for menu
   const categoryResult = await getCategories();
   if (categoryResult.error) {
@@ -55,7 +55,6 @@ async function page({ searchParams, params }: Props) {
     myPicks = getMyPicks.data;
   }
 
-
   //get blogpost
   const blogPostResult = await getBlogPostById(postId, searchParams.draft);
   if (blogPostResult.error) {
@@ -68,8 +67,10 @@ async function page({ searchParams, params }: Props) {
   if (blogPost?.data?.draft === false) {
     await addCount(postId);
   }
-
+console.log(blogPost)
   return (
+
+
     <div className={styles.container}>
       <SinglePost
         blogPost={blogPost}

@@ -2,14 +2,14 @@ const paths = {
   homePage() {
     return "/";
   },
-  editPostPage(postId: string) {
-    return `/edit/${postId}`;
+  editPostPage(postId: string, draft: string, ) {
+    return `/edit/${postId}/?draft=${draft}`;
   },
   createPostPage() {
     return "/createpost";
   },
-  viewSinglePostPage(singlePageSlug: string, draft: string, postId: string) {
-    return `/${singlePageSlug}?draft=${draft}&id=${postId}`
+  viewSinglePostPage(singlePageSlug: string, pageId: string, draft: string, ) {
+    return `/viewPost/${singlePageSlug}/${pageId}/?draft=${draft}`
   },
   viewAllPostsPage() {
     return `/allposts`;
