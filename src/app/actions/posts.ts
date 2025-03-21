@@ -4,6 +4,7 @@ import {
   collection,
   addDoc,
   getDoc,
+  setDoc,
   updateDoc,
   doc,
   deleteDoc,
@@ -147,7 +148,11 @@ export async function createBlogPost(
   };
 }
 
-export async function editPost(postId: string, post: BlogPost, prevCollection: string) {
+export async function editPost(
+  postId: string,
+  post: BlogPost,
+  prevCollection: string
+) {
   const {
     featured,
     additionalImages,
@@ -165,9 +170,12 @@ export async function editPost(postId: string, post: BlogPost, prevCollection: s
   let postDate;
   let newCategoryName = "Other";
   let newCategoryColor = "#7A5DC7";
-console.log("prevCollection", prevCollection)
+  const newCollection = draft ? "drafts" : "posts";
+  console.log("prevCollection", prevCollection, "newcollection", newCollection);
+
+  console.log("draft inside", draft)
   try {
-//get previous collection
+    //get previous collection
     const postRef = doc(db, prevCollection, postId);
     const postSnapshot = await getDoc(postRef);
     const prevPost = postSnapshot.data();
@@ -178,8 +186,8 @@ console.log("prevCollection", prevCollection)
       postDate = date;
 
       //checks if draft state has changed, if it has, it deletes from the previous collection it was in
-      if (prevPost.draft !== draft) {
-        await deleteDoc(postRef); 
+      if (prevCollection !== newCollection) {
+        await deleteDoc(postRef);
       }
 
       // handle category change
@@ -204,10 +212,10 @@ console.log("prevCollection", prevCollection)
 
     if (newCategoryRef) {
       let addCategoryData = draft
-      ? { drafts: arrayUnion(postId) }
-      : { posts: arrayUnion(postId) };
+        ? { drafts: arrayUnion(postId) }
+        : { posts: arrayUnion(postId) };
 
-    await updateDoc(newCategoryRef, addCategoryData);
+      await updateDoc(newCategoryRef, addCategoryData);
     }
     //get new categoryName
     if (category) {
@@ -217,12 +225,27 @@ console.log("prevCollection", prevCollection)
     }
 
     //check and update featured collection
-    if (!draft && prevPost?.featured !== featured ) {
-      const featuredRef = doc(db, "featured", "featuredPost");
-      const featuredSnapshot = await getDoc(featuredRef);
 
-      if (featuredSnapshot.exists()) {
-        const prevFeaturedId = featuredSnapshot.data().post || "";
+    const featuredRef = doc(db, "featured", "featuredPost");
+    const featuredSnapshot = await getDoc(featuredRef);
+
+    if (featuredSnapshot.exists()) {
+      const prevFeaturedId = featuredSnapshot.data().post || "";
+      // if it's a draft now, but wasn't a draft before and prevpost.featured === true,
+      // remove it from the featured collection
+      if (draft && prevPost?.featured) {
+        await updateDoc(featuredRef, {
+          post: arrayRemove(postId),
+        });
+      }
+      //if its not a draft, it previously was, and now it's not featured
+      if (!draft && prevPost?.featured && !featured) {
+        await updateDoc(featuredRef, {
+          post: prevFeaturedId ? arrayRemove(prevFeaturedId) : null,
+        });
+      }
+      //if current post is NOT a draft and it's now featured
+      if (!draft && featured) {
         //if post id doesn't match previous post id, remove it.
         if (featured && postId !== prevFeaturedId) {
           await updateDoc(featuredRef, {
@@ -235,53 +258,89 @@ console.log("prevCollection", prevCollection)
         }
       }
     }
+    //update my picks collection
+    const myPicksRef = doc(db, "myPicks", "picks");
+    const myPicksDocSnapshot = await getDoc(myPicksRef);
 
-    //check and update myPick in the myPicks collection
-    if (!draft && prevPost?.myPick !== myPick) {
-      const myPicksRef = doc(db, "myPicks", "picks");
-      const myPicksDocSnapshot = await getDoc(myPicksRef);
-      if (myPicksDocSnapshot.exists()) {
-        const currentPicks = myPicksDocSnapshot.data().posts || [];
-        //check how many posts there are in the array. must be fewer than 5. if this fails, it returns an error.
-        if (myPick) {
-          checkQuantityOfPicks(currentPicks, postId);
-          const updatedPicks = {
-            posts: arrayUnion(postId),
-          };
+    if (myPicksDocSnapshot.exists()) {
+      const currentPicks = myPicksDocSnapshot.data().posts || [];
 
-          await updateDoc(myPicksRef, updatedPicks);
-        } else {
-          //if my pick is false, remove from myPicks
-          const updatedPicks = {
-            posts: arrayRemove(postId),
-          };
-          await updateDoc(myPicksRef, updatedPicks);
-        }
-      } else {
-        return { error: true, message: "Error updating picks collection" };
+      // if (myPick && prevPost?.myPick) {
+      //   return;
+      // }
+      //if it's currently a draft, but it was previously myPick === true, remove it from the featured array db
+      if (draft && prevPost?.myPick) {
+        const updatedPicks = {
+          posts: arrayRemove(postId),
+        };
+        await updateDoc(myPicksRef, updatedPicks);
       }
+      //if the current post is not a draft, and it is now NOT a pick, but prev post was a pick
+      if (!draft && !myPick && prevPost?.myPick) {
+        //check how many posts there are in the array. must be fewer than 5. if this fails, it returns an error.
+
+        const updatedPicks = {
+          posts: arrayRemove(postId),
+        };
+
+        await updateDoc(myPicksRef, updatedPicks);
+      }
+
+      //finally, if it's NOT a draft and it's myPick
+      if (!draft && myPick) {
+        checkQuantityOfPicks(currentPicks, postId);
+        const updatedPicks = {
+          posts: arrayUnion(postId),
+        };
+
+        await updateDoc(myPicksRef, updatedPicks);
+
+        // if(!draft && !myPick) {
+        //   return
+        // }
+      } 
     }
 
-    const newCollection = draft ? "drafts" : "posts";
-    console.log('new collectin', newCollection)
-    const newPostRef = doc(db, newCollection, postId);
-    await updateDoc(newPostRef, {
-      featured,
-      myPick,
-      additionalImages,
-      coverImage,
-      content,
-      category,
-      categoryName: newCategoryName,
-      categoryColor: newCategoryColor,
-      date: postDate,
-      editedAt: new Date(),
-      draft,
-      tags,
-      title,
-      views,
-      slug,
-    });
+    if (newCollection === prevCollection) {
+      const updatePostRef = doc(db, prevCollection, postId);
+      await updateDoc(updatePostRef, {
+        featured,
+        myPick,
+        additionalImages,
+        coverImage,
+        content,
+        category,
+        categoryName: newCategoryName,
+        categoryColor: newCategoryColor,
+        date: postDate,
+        editedAt: new Date(),
+        draft,
+        tags,
+        title,
+        views,
+        slug,
+      });
+    }
+    if (newCollection !== prevCollection) {
+      const newPostRef = doc(db, newCollection, postId);
+      await setDoc(newPostRef, {
+        featured,
+        myPick,
+        additionalImages,
+        coverImage,
+        content,
+        category,
+        categoryName: newCategoryName,
+        categoryColor: newCategoryColor,
+        date: postDate,
+        editedAt: new Date(),
+        draft,
+        tags,
+        title,
+        views,
+        slug,
+      });
+    }
   } catch (error: any) {
     console.log(error);
     if (error.code === "permission-denied") {
@@ -300,6 +359,7 @@ console.log("prevCollection", prevCollection)
   return {
     error: false,
     slug: slug,
+    draft: draft ? "true" : "false",
     message: "Successfully edited post to database!",
   };
 }
