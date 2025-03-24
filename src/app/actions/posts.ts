@@ -232,32 +232,59 @@ export async function editPost(
     const featuredSnapshot = await getDoc(featuredRef);
 
     if (featuredSnapshot.exists()) {
-      const prevFeaturedId = featuredSnapshot.data().post || "";
-      // if it's a draft now, but wasn't a draft before and prevpost.featured === true,
-      // remove it from the featured collection
+      const featuredData = featuredSnapshot.data();
+      const prevFeaturedId = featuredData?.post || [];
+    
+      // Log the current state of the featured post array
+      console.log("Current featured posts:", prevFeaturedId);
+    
+      // If it's a draft now, but wasn't before and was previously featured
       if (draft && prevPost?.featured) {
+        console.log("Removing from featured: ", postId);
         await updateDoc(featuredRef, {
-          post: arrayRemove(postId),
+          post: arrayRemove(postId), // Remove from featured post array
         });
       }
-      //if its not a draft, it previously was, and now it's not featured
+    
+      // If it's not a draft now, but was before and not featured
       if (!draft && prevPost?.featured && !featured) {
-        await updateDoc(featuredRef, {
-          post: prevFeaturedId ? arrayRemove(prevFeaturedId) : null,
-        });
-      }
-      //if current post is NOT a draft and it's now featured
-      if (!draft && featured) {
-        //if post id doesn't match previous post id, remove it.
-        if (featured && postId !== prevFeaturedId) {
+        console.log("Removing previously featured post: ", prevFeaturedId);
+        // Only remove if prevFeaturedId is a valid value
+        if (prevFeaturedId.length > 0) {
           await updateDoc(featuredRef, {
-            post: prevFeaturedId ? arrayRemove(prevFeaturedId) : null,
-          });
-          //add new id
-          await updateDoc(featuredRef, {
-            post: postId,
+            post: arrayRemove(prevFeaturedId[0]), // Remove previous post
           });
         }
+      }
+    
+      // If current post is NOT a draft and it is now featured
+      if (!draft && featured) {
+        console.log("Adding to featured: ", postId);
+        // If it's not the same post that's already featured
+        if (postId !== prevFeaturedId[0]) {
+          console.log("Removing old featured post: ", prevFeaturedId[0]);
+          // Only remove if prevFeaturedId is a valid value
+          if (prevFeaturedId.length > 0) {
+            await updateDoc(featuredRef, {
+              post: arrayRemove(prevFeaturedId[0]), // Remove previous post
+            });
+          }
+          console.log("Adding new featured post: ", postId);
+          await updateDoc(featuredRef, {
+            post: arrayUnion(postId), // Add the current post
+          });
+        }
+      }
+    } else {
+      // If the featuredPost document doesn't exist, create it and add the current post to the array if it's featured
+      console.log("Featured post document does not exist. Creating a new featured post document.");
+    
+      // If the current post is featured, add it to the new document
+      if (featured) {
+        console.log("Adding current post to new featured post document: ", postId);
+        await setDoc(featuredRef, {
+          post: arrayUnion(postId),
+        });
       }
     }
     //update my picks collection
