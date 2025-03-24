@@ -171,6 +171,8 @@ export async function editPost(
   let newCategoryName = "Other";
   let newCategoryColor = "#7A5DC7";
   const newCollection = draft ? "drafts" : "posts";
+  let featuredStatus = draft? false : featured
+  let myPickStatus = draft? false : myPick
   console.log("prevCollection", prevCollection, "newcollection", newCollection);
 
   console.log("draft inside", draft)
@@ -304,8 +306,8 @@ export async function editPost(
     if (newCollection === prevCollection) {
       const updatePostRef = doc(db, prevCollection, postId);
       await updateDoc(updatePostRef, {
-        featured,
-        myPick,
+        featured: featuredStatus,
+        myPick : myPickStatus,
         additionalImages,
         coverImage,
         content,
@@ -324,8 +326,8 @@ export async function editPost(
     if (newCollection !== prevCollection) {
       const newPostRef = doc(db, newCollection, postId);
       await setDoc(newPostRef, {
-        featured,
-        myPick,
+        featured: featuredStatus,
+        myPick: myPickStatus,
         additionalImages,
         coverImage,
         content,
