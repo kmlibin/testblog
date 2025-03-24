@@ -20,7 +20,8 @@ type Props = {
 
 async function page({ searchParams, params }: Props) {
   const postId = params.pageId;
-  console.log(params)
+  console.log(params.singlePageSlug);
+  console.log(params);
   let blogPost: BlogPostWithId | null = null;
   let blogPostError: string | null = null;
   let myPicks: BlogPostWithId[] | null = null;
@@ -63,14 +64,12 @@ async function page({ searchParams, params }: Props) {
     blogPost = blogPostResult.data;
   }
 
-  //add to count
+  //add to count if draft is false
   if (blogPost?.data?.draft === false) {
     await addCount(postId);
   }
-console.log(blogPost)
+
   return (
-
-
     <div className={styles.container}>
       <SinglePost
         blogPost={blogPost}
