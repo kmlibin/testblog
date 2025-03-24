@@ -67,6 +67,7 @@ const Edit = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [draft, setDraft] = useState<boolean>(blogPost?.data?.draft || false);
   const [postId, setPostId] = useState<string>(blogPost?.id || "");
+  const [returnedDraft, setReturnedDraft] = useState<string>("");
 
 
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
@@ -94,7 +95,7 @@ const Edit = ({
       file: file,
     });
   };
-console.log(prevCollection)
+  console.log(prevCollection);
   //uploads for array of images
   const handleAdditionalImageUpload = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -180,12 +181,14 @@ console.log(prevCollection)
       //call server action, editpost
       const response = await editPost(postId, post, prevCollection);
       //if successful
-      if (response.error === false) {
-        const { message, slug } = response;
+      if (response?.error === false) {
+        const { message, slug, draft } = response;
+        console.log("response", response);
         setLoading(false);
         setSuccess(true);
         setModalMessage(message);
         setPostSlug(slug ? slug : "/");
+        setReturnedDraft(draft || "");
         setShowModal(true);
 
         //clear state values
@@ -197,7 +200,7 @@ console.log(prevCollection)
         setDraft(false);
       }
       //if unsuccessful
-      if (response.error === true) {
+      if (response?.error === true) {
         const { message } = response;
         setLoading(false);
         setSuccess(false);
@@ -213,11 +216,12 @@ console.log(prevCollection)
       setShowModal(true);
     }
   };
-
+  console.log("returned draft outside", returnedDraft);
   const closeModal = () => {
+    console.log("runs");
     setShowModal(false);
     if (success == true && postSlug) {
-      router.push(paths.viewSinglePostPage(postSlug, "true", postId));
+      router.push(paths.viewSinglePostPage(postSlug, postId, returnedDraft));
     }
   };
 

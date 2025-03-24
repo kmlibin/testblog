@@ -1,39 +1,99 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
+import { useSearchParams, useParams } from "next/navigation";
+
 import { BlogPostWithId, CategoryWithId } from "@/app/types";
-import { getBlogPostById } from "@/app/firebase/queries/blogPostQueries";
-import { getCategories } from "@/app/firebase/queries/sectionQueries";
+
 import Edit from "./Edit";
 
-type EditPageProps = {
-  params: {
-    postId: string;
-  };
-};
+type EditPageProps = {};
 
-const page = async (props: EditPageProps) => {
-  const { params } = props;
+//switch to client side rendering. when i edit a post in the db and it switches between the posts/drafts collection
+//it refetches, but of course it doesn' thave the correct params any longer (it fetches it's previous collection, not it's current).
+//to avoid this i use useffect to control the rendering.
+const page = (props: EditPageProps) => {
+  const [blogPost, setBlogPost] = useState<BlogPostWithId | null>(null);
+  const [blogPostError, setBlogPostError] = useState<string | null>(null);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<CategoryWithId[] | null>(null);
+  const params = useParams<{ postId: string }>();
+  const searchParams = useSearchParams();
+  const draftStatus = searchParams.get("draft");
   const postId = params.postId;
-  let blogPost: BlogPostWithId | null = null;
-  let blogPostError: string | null = null;
-  let categoriesError: string | null = null;
-  let categories: CategoryWithId[] | null = null;
 
-  const categoryResult = await getCategories();
-  if (categoryResult.error) {
-    categoriesError = categoryResult.error;
-  } else {
-    categories = categoryResult.categories;
-  }
+  useEffect(() => {
+    if (!postId || !draftStatus) return;
+    const fetchBlogPost = async () => {
+      try {
+        const res = await fetch(
+          `/api/getProductById?id=${postId}&draft=${draftStatus}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+        if (!res.ok) {
+          setBlogPostError(`Error: ${res.status}`);
+        }
 
-  const blogPostResult = await getBlogPostById(postId);
-  if (blogPostResult.error) {
-    blogPostError = blogPostResult.error;
-  } else {
-    blogPost = blogPostResult.data;
-  }
+        const jsonResponse = await res.json();
+
+        if (jsonResponse.status === 200 && jsonResponse.data) {
+          setBlogPost(jsonResponse.data);
+        } else {
+          setBlogPostError(jsonResponse.error || "Unknown error occurred.");
+        }
+      } catch (error) {
+        console.error("Error fetching post", error);
+      }
+    };
+    fetchBlogPost();
+  }, [postId, draftStatus]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`/api/getCategories`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!res.ok) {
+          setBlogPostError(`Error: ${res.status}`);
+        }
+
+        const jsonResponse = await res.json();
+        if (jsonResponse.status === 200 && jsonResponse.categories) {
+          setCategories(jsonResponse.categories);
+        } else {
+          setCategoriesError(jsonResponse.error || "Unknown error occurred.");
+        }
+      } catch (error) {
+        console.error("Error fetching post", error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // useEffect(() => {
+  //   const categoryResult = getCategories();
+  //   if (categoryResult?.error) {
+  //     setCategoriesError(categoryResult?.error);
+  //   } else {
+  //     setCategories(categoryResult.categories);
+  //   }
+
+  //   const categoryResult = await getCategories();
+  //   if (categoryResult.error) {
+  //     categoriesError = categoryResult.error;
+  //   } else {
+  //     categories = categoryResult.categories;
+  //   }
+
+  //
 
   //   console.log(blogPostResult, categories)
-    console.log(blogPostError, categoriesError)
+  if (!blogPost && !blogPostError) return <p>Loading post...</p>;
+  console.log("Rendering Edit with blogPost:", blogPost);
   return (
     <Edit
       categoriesError={categoriesError}
