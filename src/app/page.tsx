@@ -9,7 +9,7 @@ import { getCategories } from "./firebase/queries/sectionQueries";
 import { getActiveBlogPosts, getPopularPosts } from "./firebase/queries/blogPostQueries";
 import { getPicks } from "./firebase/queries/picksQueries";
 import getFeatured from "./firebase/queries/featuredQueries";
-import { M_PLUS_1 } from "next/font/google";
+
 
 type HomeProps = {
   searchParams: {page: string}
@@ -33,7 +33,7 @@ export default async function Home({searchParams} : HomeProps) {
   const limitCount = 1
 
   //get blogPosts - needs page number and limit
-  const fetchedPosts = await getActiveBlogPosts(currentPage, limitCount)
+  const fetchedPosts = await getActiveBlogPosts(currentPage, limitCount, "posts", "asc", null)
 
 
   if(fetchedPosts.error) {
