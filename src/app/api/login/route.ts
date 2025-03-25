@@ -4,7 +4,7 @@ import { auth } from "../../firebase/config";
 
 //fb auth and admin
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { db as adminDb, admin } from "../../firebase/firebaseAdmin";
+import { initializeAdminApp } from "../../firebase/firebaseAdmin";
 import { getAuth } from "firebase-admin/auth";
 
 //firestore
@@ -15,7 +15,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 
 export async function POST(req: NextRequest, res: NextResponse) {
-  console.log('hit login route')
+
+initializeAdminApp()
+
   //need to use firebase admin
 
 
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest, res: NextResponse) {
         if (userData.isAdmin) {
           
           //set custom claims, which are then attached to the user object in firebase admin (admin true)
-          await admin.auth()
+          await getAuth()
             .setCustomUserClaims(uid, { admin: true })
             .then(() => {
               console.log("custom claims set!");
