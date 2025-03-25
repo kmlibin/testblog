@@ -1,10 +1,17 @@
+"use client"
+
 import React from "react";
 import Image from "next/image";
 import styles from "./navbar.module.css";
 import Link from "next/link";
 import AuthLinks from "../authLinks/AuthLinks";
 import ThemeToggle from "../themeToggle/ThemeToggle";
+import AdminButtons from "../adminButtons/AdminButtons";
+import { useAuth } from "@/context/AuthContext";
 const Navbar = () => {
+
+  const {user} = useAuth()
+
   return (
     <div className={styles.container}>
       <div className={styles.social}>
@@ -19,7 +26,7 @@ const Navbar = () => {
         <Link className={styles.link} href="/">HomePage</Link>
         <Link className={styles.link} href="/contact">Contact</Link>
         <Link className={styles.link} href="/about">About</Link>
-        <AuthLinks />
+        {user.isAdmin && <AdminButtons/>}
       </div>
     </div>
   );
