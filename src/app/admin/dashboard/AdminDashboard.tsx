@@ -1,8 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import styles from "./admindashboard.module.css";
 import { BlogPostWithId, CategoryWithId } from "@/app/types";
 import Card from "@/components/card/Card";
+import { useSearchParams } from "next/navigation";
+import { getActiveBlogPosts } from "@/app/firebase/queries/blogPostQueries";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+
 
 type AdminDashboardProps = {
   // blogPostError: string | null;
@@ -15,6 +20,16 @@ type AdminDashboardProps = {
   categoriesError: string | null;
 };
 
+export  function debounce(func: any, wait: any) {
+  let timeout: any;
+  return function (...args: any) {
+    clearTimeout(timeout);
+    //@ts-ignore
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+
 const AdminDashboard = ({
   myPicks,
   myPicksError,
@@ -23,20 +38,73 @@ const AdminDashboard = ({
   categories,
   categoriesError,
 }: AdminDashboardProps) => {
-  const [activeTab, setActiveTab] = useState<"active" | "drafts">("active");
-  const [sortOrder, setSortOrder] = useState<"recent" | "oldest">("recent");
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+
+  const [activeTab, setActiveTab] = useState<string>("posts");
+  const [sortOrder, setSortOrder] = useState<string>("desc");
   const [category, setCategory] = useState<string>("all");
-  console.log(activeTab, sortOrder, category);
-  console.log(featuredPost);
+  const [currentPage, setCurrentPage] = useState(1)
+  const [limitCount, setLimitCount] = useState(5)
+  
+  const createQueryString = useCallback(
+    (name: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set(name, value)
+ 
+      return params.toString()
+    },
+    [searchParams]
+  )
+
+  console.log(searchParams)
+  useEffect(() => {
+    const status = searchParams.get("status")
+    const searchQueryCategory = searchParams.get("category")
+    const order = searchParams.get("sortOrder")
+    if(status) {
+      setActiveTab(status)
+    }
+    if(category) {
+      setCategory(searchQueryCategory || "")
+    }
+    if(order) {
+      setSortOrder(order)
+    }
+  }, [searchParams])
+
+
+  useEffect(() => {
+    const fetchProducts = async() => {
+      try {
+        const products = await getActiveBlogPosts(currentPage, limitCount, activeTab, sortOrder, category)
+        console.log(products)
+      } catch(err) {
+
+      }
+    }
+
+    fetchProducts()
+  }, [activeTab, currentPage, limitCount, sortOrder, category])
+
+console.log(currentPage, limitCount)
+
+  // section change
+  const handleSectionChange = (value: string) => {
+    setCategory(value);
+    router.push(pathname + "?" + createQueryString("category", value));
+  };
   return (
     <div className={styles.dashboard}>
       {/* active/draft tabs */}
       <div className={styles.tabs}>
         <button
           className={`${styles.tab} ${
-            activeTab === "active" ? styles.active : ""
+            activeTab === "posts" ? styles.active : ""
           }`}
-          onClick={() => setActiveTab("active")}
+          onClick={() => {setActiveTab("posts"),  router.push(pathname + '?' + createQueryString('status', "posts"
+          ))}}
         >
           Active Posts
         </button>
@@ -44,7 +112,8 @@ const AdminDashboard = ({
           className={`${styles.tab} ${
             activeTab === "drafts" ? styles.active : ""
           }`}
-          onClick={() => setActiveTab("drafts")}
+          onClick={() => {setActiveTab("drafts"),  router.push(pathname + '?' + createQueryString('status', "drafts"
+          ))}}
         >
           Drafts
         </button>
@@ -55,20 +124,23 @@ const AdminDashboard = ({
         <select
           className={styles.dropdown}
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as "recent" | "oldest")}
+          onChange={(e) => {
+            setSortOrder(e.target.value);
+            router.push(pathname + "?" + createQueryString("sortOrder", e.target.value));
+          }}
         >
-          <option value="recent">Sort by Most Recent</option>
-          <option value="oldest">Sort by Oldest First</option>
+          <option value="desc">Sort by Most Recent</option>
+          <option value="asc">Sort by Oldest First</option>
         </select>
 
         <select
           className={styles.dropdown}
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
+          value={category ?  category : ""}
+          onChange={(e) => {handleSectionChange(e.target.value)}}
         >
           <option value="all">All</option>
           {categories?.map((category) => (
-            <option value={category.id}>{category.name}</option>
+            <option value={category.name}>{category.name}</option>
           ))}
         </select>
       </div>
