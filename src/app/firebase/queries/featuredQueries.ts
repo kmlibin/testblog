@@ -13,8 +13,10 @@ export default async function getFeatured(): Promise<SingleReturnType> {
       return { data: null, error: "no featured post" };
     }
     const postId = featuredSnapshot.data();
+
     if (postId) {
-      const blogPost = await getBlogPostById(postId.post, "false");
+      const blogPost = await getBlogPostById(postId.post[0], "false");
+  
       return { data: blogPost.data, error: null };
     } else {
       return { data: null, error: "no featured post" };
