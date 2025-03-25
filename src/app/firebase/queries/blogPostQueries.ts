@@ -27,22 +27,21 @@ type MultipleBlogPostResult = {
   error: string | null;
 };
 
-
 // gets prev document for pagination
 async function getLastDocument(page: number, pageLimit: number) {
   // fetch documents when page > 1 (because we need a last document to continue the query)
-  console.log("page", page, "pageLimit", pageLimit, "limitBy", pageLimit * (page - 1))
+  // console.log("page", page, "pageLimit", pageLimit, "limitBy", pageLimit * (page - 1))
   if (page > 1) {
     const postsQuery = query(
       collection(db, "posts"),
       orderBy("date", "desc"),
-      limit(pageLimit * (page - 1)) 
+      limit(pageLimit * (page - 1))
     );
     const postsSnapshot = await getDocs(postsQuery);
 
     // last document on the current page
     const lastDocument = postsSnapshot.docs[postsSnapshot.docs.length - 1];
-    console.log("last document:", lastDocument ? lastDocument.data() : "No last document found");
+    // console.log("last document:", lastDocument ? lastDocument.data() : "No last document found");
 
     return lastDocument || null;
   }
@@ -55,22 +54,33 @@ async function getLastDocument(page: number, pageLimit: number) {
 export async function getActiveBlogPosts(
   page: number,
   limitCount: number,
+  searchStatus: string,
+  searchOrder: string,
+  searchCategory: string | null
 ): Promise<{
   error: string | null;
   data: BlogPostWithId[] | null;
   totalPages: number | null;
   totalPosts: number | null;
 }> {
-
-  console.log("page", page, "limitCount", limitCount)
+  // console.log("hits", page, limitCount, "searchStatus", searchStatus, "searchOrder", searchOrder, "searchCategory", searchCategory)
 
   try {
     //start document for pagination
     let postsQuery = query(
-      collection(db, "posts"),
-      orderBy("date", "desc"),
+      collection(db, searchStatus === "posts" ? "posts" : "drafts"),
+      orderBy("date", searchOrder === "asc" ? "asc" : "desc"),
       limit(limitCount)
     );
+
+    if (searchCategory) {
+      postsQuery = query(
+        collection(db, searchStatus === "posts" ? "posts" : "drafts"),
+        where("categoryName", "==", searchCategory),
+        orderBy("date", searchOrder === "asc" ? "asc" : "desc"),
+        limit(limitCount)
+      );
+    }
 
     // get the last document from the previous page
     if (page > 1) {
@@ -85,9 +95,18 @@ export async function getActiveBlogPosts(
           totalPosts: null,
         };
       }
+      if (searchCategory) {
+        postsQuery = query(
+          collection(db, searchStatus === "posts" ? "posts" : "drafts"),
+          where("categoryName", "==", searchCategory),
+          orderBy("date", searchOrder === "asc" ? "asc" : "desc"),
+          startAfter(lastDocument),
+          limit(limitCount)
+        );
+      }
       postsQuery = query(
-        collection(db, "posts"),
-        orderBy("date", "desc"),
+        collection(db, searchStatus),
+        orderBy("date", searchOrder === "asc" ? "asc" : "desc"),
         startAfter(lastDocument),
         limit(limitCount)
       );
@@ -96,13 +115,15 @@ export async function getActiveBlogPosts(
     //access the documents in the db database
     const postsSnapshot = await getDocs(postsQuery);
     //get count from database
-    const totalPostsSnapshot = await getCount(collection(db, "posts"));
+    const totalPostsSnapshot = await getCount(collection(db, searchStatus));
     const totalPosts = totalPostsSnapshot.data().count;
     //calculate total pages
     const totalPages = Math.ceil(totalPosts / limitCount);
     if (postsSnapshot.empty) {
       return {
-        error: "error fetching posts",
+        error: searchCategory
+          ? `No posts found under the category "${searchCategory}".`
+          : "Error fetching posts",
         data: null,
         totalPages: 0,
         totalPosts: 0,
@@ -110,23 +131,21 @@ export async function getActiveBlogPosts(
     }
 
     if (postsSnapshot) {
-      const posts: any = postsSnapshot.docs
-        .map((doc) => {
-          const postData = doc.data() as BlogPost;
-          const formattedPostData = {
-            ...postData,
-            date:
-              postData.date instanceof Timestamp
-                ? postData.date.toDate().toISOString()
-                : null,
-            editedAt:
-              postData.editedAt instanceof Timestamp
-                ? postData.editedAt.toDate().toISOString()
-                : null,
-          };
-          return { id: doc.id, data: formattedPostData };
-        })
-    
+      const posts: any = postsSnapshot.docs.map((doc) => {
+        const postData = doc.data() as BlogPost;
+        const formattedPostData = {
+          ...postData,
+          date:
+            postData.date instanceof Timestamp
+              ? postData.date.toDate().toISOString()
+              : null,
+          editedAt:
+            postData.editedAt instanceof Timestamp
+              ? postData.editedAt.toDate().toISOString()
+              : null,
+        };
+        return { id: doc.id, data: formattedPostData };
+      });
 
       return { error: null, data: posts, totalPages, totalPosts };
     }
@@ -147,12 +166,11 @@ export async function getActiveBlogPosts(
 }
 
 export async function getBlogPostById(
-  id: string, 
-  draft: string,
+  id: string,
+  draft: string
 ): Promise<SingleBlogPostResult> {
-
-  console.log("draft", draft, "id", id)
-  const collection = draft === "true" ? "drafts" : "posts"
+  console.log("draft", draft, "id", id);
+  const collection = draft === "true" ? "drafts" : "posts";
   const postRef = doc(db, collection, id);
 
   try {
