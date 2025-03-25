@@ -7,6 +7,8 @@ import { BlogPostWithId, CategoryWithId } from "@/app/types";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
 import { formatDate } from "@/app/utils/formatDate";
+import { useAuth } from "@/context/AuthContext";
+import EditPostButton from "../../EditPostButton";
 
 type SinglePostProps = {
   blogPostError: string | null;
@@ -29,11 +31,12 @@ const SinglePost = ({
   categories,
   categoriesError,
 }: SinglePostProps) => {
+
+  const {user} = useAuth()
   if (blogPostError || !blogPost) {
     return <div className={styles.error}>Error fetching Post...</div>;
   }
 
-  console.log(blogPost)
   const {
     title,
     content,
@@ -53,6 +56,7 @@ const SinglePost = ({
 
   return (
     <div className={styles.container}>
+      {user && <EditPostButton draft={blogPost?.data.draft.toString()} postId={blogPost.id} />}
       <div className={styles.infoContainer}>
         <div className={styles.textContainer}>
           <h1 className={styles.title}>{title}</h1>

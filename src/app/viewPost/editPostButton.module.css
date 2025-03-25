@@ -1,0 +1,12 @@
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 2rem;
+}
+
+.edit {
+    background-color:indianred;
+    padding: 1rem;
+    border-radius: 15px;
+}
