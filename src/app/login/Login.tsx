@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 
 import { useRouter } from "next/navigation";
-
+import { useAuth } from "@/context/AuthContext";
 
 import styles from "./loginPage.module.css";
 
@@ -12,7 +12,7 @@ const Login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-
+  const { setUser, addAuthContext } = useAuth();
   const router = useRouter();
 
 
@@ -26,9 +26,13 @@ const Login = () => {
           "Content-Type": "application/json",
         },
       });
-      if (res.status === 200) {
-        console.log('login worked')
+      if (res.status === 200) { 
         setLoading(false);
+        const userData = {isAdmin: true}
+        setUser && setUser(userData);
+        addAuthContext();
+        console.log('login worked')
+       
         router.push("/");
       } else {
         setLoading(false);
