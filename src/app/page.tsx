@@ -6,16 +6,17 @@ import Menu from "@/components/menu/Menu";
 import { BlogPostWithId } from "./types";
 import { CategoryWithId } from "./types";
 import { getCategories } from "./firebase/queries/sectionQueries";
-import { getActiveBlogPosts, getPopularPosts } from "./firebase/queries/blogPostQueries";
+import {
+  getActiveBlogPosts,
+  getPopularPosts,
+} from "./firebase/queries/blogPostQueries";
 import { getPicks } from "./firebase/queries/picksQueries";
 import getFeatured from "./firebase/queries/featuredQueries";
 
-
 type HomeProps = {
-  searchParams: {page: string}
-
-}
-export default async function Home({searchParams} : HomeProps) {
+  searchParams: { page: string };
+};
+export default async function Home({ searchParams }: HomeProps) {
   let featured: BlogPostWithId | null = null;
   let featuredError: string | null = null;
   let blogPosts: any = null;
@@ -29,20 +30,25 @@ export default async function Home({searchParams} : HomeProps) {
   let categoriesError: string | null = null;
   let categories: CategoryWithId[] | null = null;
 
-  const currentPage = parseInt(searchParams.page) || 1
-  const limitCount = 1
+  const currentPage = parseInt(searchParams.page) || 1;
+  const limitCount = 1;
 
   //get blogPosts - needs page number and limit
-  const fetchedPosts = await getActiveBlogPosts(currentPage, limitCount, "posts", "asc", null)
+  const fetchedPosts = await getActiveBlogPosts(
+    currentPage,
+    limitCount,
+    "posts",
+    "asc",
+    null
+  );
 
-
-  if(fetchedPosts.error) {
-    console.log(fetchedPosts.error)
-    blogPostsError = fetchedPosts.error
+  if (fetchedPosts.error) {
+    console.log(fetchedPosts.error);
+    blogPostsError = fetchedPosts.error;
   } else {
-    blogPosts = fetchedPosts.data
-    totalPages = fetchedPosts.totalPages
-    totalPosts = fetchedPosts.totalPosts
+    blogPosts = fetchedPosts.data;
+    totalPages = fetchedPosts.totalPages;
+    totalPosts = fetchedPosts.totalPosts;
   }
 
   //get featured post
@@ -85,7 +91,12 @@ export default async function Home({searchParams} : HomeProps) {
         categoriesError={categoriesError}
       />
       <div className={styles.content}>
-        <CardList blogPosts={blogPosts} blogPostsError={blogPostsError} totalPages={totalPages} currentPage={currentPage}/>
+        <CardList
+          blogPosts={blogPosts}
+          blogPostsError={blogPostsError}
+          totalPages={totalPages}
+          currentPage={currentPage}
+        />
         <Menu
           categories={categories}
           categoriesError={categoriesError}
