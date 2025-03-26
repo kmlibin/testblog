@@ -393,6 +393,87 @@ export async function editPost(
   };
 }
 
+export const deletePost = async (
+  id: string,
+  imagePath: string[],
+  categoryId: string,
+  draft: string,
+) => {
+  try {
+    //delete product from appropriate document in categories collection
+    //get the appropriate category document and a snapshot of the current state
+    const categoriesDocRef = doc(db, "categories", categoryId);
+    const categoriesDocSnapshot = await getDoc(categoriesDocRef);
+
+    //remove from category collection. if draft === "posts", remove it from posts. otherwise remove it from "drafts"
+    if (categoriesDocSnapshot.exists()) {
+      let updatedSectionData
+      if(draft === "posts") {
+         updatedSectionData = {
+        posts: arrayRemove(id),
+      };
+      } else {
+         updatedSectionData  = {
+          drafts: arrayRemove(id)
+         }
+      }
+     
+
+      await updateDoc(categoriesDocRef, updatedSectionData);
+    }
+
+    //delete from appropriate collection
+    if(draft === "posts") {
+      
+    await deleteDoc(doc(db, "posts", id));
+    }
+
+    if(draft === "drafts") {
+      await deleteDoc(doc(db, "drafts", id))
+    }
+
+    // delete images from Firebase Storage
+    await Promise.all(
+      imagePath.map(async (path) => {
+        console.log(`image url = ${path}`);
+        if (path) {
+          // create a reference to the image in Firebase Storage
+          const imageRef = ref(storage, path);
+          console.log(`image ref is ${imageRef}`);
+          // Delete the image from Firebase Storage
+          deleteObject(imageRef).then(() => {
+            console.log("deleted google storage photo");
+          });
+        }
+      })
+    );
+
+    //need to delete from myPicks and featured, if those things are true. errors if could delete from one, but not another, etc.
+
+
+  } catch (error: any) {
+    // figure out fb specific errors
+    if (error.code === "permission-denied") {
+      return {
+        error: true,
+        message: "Permission denied. Please try again later.",
+      };
+    }
+    return {
+      error: true,
+      message: "Error deleting product from database, try again later",
+    };
+  }
+  //revalidate paths that show products
+  // revalidatePath("/admin");
+  // revalidatePath("/admin/listings");
+  // revalidatePath("/shop/products");
+  return {
+    error: false,
+    message: "Successfully deleted product from database",
+  };
+};
+
 export async function addCount(postId: string) {
   try {
     const postRef = doc(db, "posts", postId);
