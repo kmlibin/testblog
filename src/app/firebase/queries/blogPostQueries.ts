@@ -64,16 +64,24 @@ export async function getActiveBlogPosts(
   totalPosts: number | null;
 }> {
   // console.log("hits", page, limitCount, "searchStatus", searchStatus, "searchOrder", searchOrder, "searchCategory", searchCategory)
-
+console.log("searchCat", searchCategory)
   try {
     //start document for pagination
     let postsQuery = query(
+        collection(db, searchStatus === "posts" ? "posts" : "drafts"),
+        orderBy("date", searchOrder === "asc" ? "asc" : "desc"),
+        limit(limitCount)
+      )
+    
+    if (!searchCategory || searchCategory === "all") { 
+      postsQuery = query(
       collection(db, searchStatus === "posts" ? "posts" : "drafts"),
       orderBy("date", searchOrder === "asc" ? "asc" : "desc"),
       limit(limitCount)
-    );
+    )
+  }
 
-    if (searchCategory) {
+    if (searchCategory && searchCategory !== "all") {
       postsQuery = query(
         collection(db, searchStatus === "posts" ? "posts" : "drafts"),
         where("categoryName", "==", searchCategory),
@@ -95,7 +103,7 @@ export async function getActiveBlogPosts(
           totalPosts: null,
         };
       }
-      if (searchCategory) {
+      if (searchCategory && searchCategory !== "all") {
         postsQuery = query(
           collection(db, searchStatus === "posts" ? "posts" : "drafts"),
           where("categoryName", "==", searchCategory),
