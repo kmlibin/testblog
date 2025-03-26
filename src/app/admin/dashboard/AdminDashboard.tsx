@@ -177,20 +177,28 @@ const AdminDashboard = ({
       {featuredPostError && <div>{featuredPostError}</div>}
         {featuredPost && (
         <div className={styles.tableCardContainer}>
-          <h2>Featured Post</h2>
+          <h2 className={styles.title}>Featured Post</h2>
             <TableCard post = {featuredPost}/>
        </div>
         )}
         {myPicksError && <div>{myPicksError}</div>}
         {myPicks && (
-          <div>
-            <h2>My Picks</h2>
+         <div className={styles.tableCardContainer}>
+            <h2 className={styles.title}>My Picks</h2>
             {myPicks.map((pick) => (
-              <Card post={pick} />
+              <TableCard post={pick} />
             ))}
           </div>
         )}
         {postsError && <div>{postsError}</div>}
+        {posts && (
+         <div className={styles.tableCardContainer}>
+            <h2 className={styles.title}>Posts</h2>
+            {posts.map((post) => (
+              <TableCard post={post} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

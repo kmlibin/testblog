@@ -10,6 +10,7 @@ import { CiEdit } from "react-icons/ci";
 import { RiDeleteBinLine } from "react-icons/ri";
 import Link from "next/link";
 import paths from "@/paths";
+import DeletePost from "@/components/deletePost/DeletePost";
 
 
 type Props = {
@@ -59,7 +60,7 @@ const TableCard = ({ post }: Props) => {
         >
           <CiEdit />
         </Link>
-        <button
+        {/* <button
           data-tooltip="Delete Post"
           type="button"
           aria-label="delete post"
@@ -67,7 +68,8 @@ const TableCard = ({ post }: Props) => {
           className={styles.singleIcon}
         >
           <RiDeleteBinLine />
-        </button>
+        </button> */}
+        <DeletePost format="icon" post={post} draft={post.data.draft === true ? "drafts" : "posts"}/>
       </div>
     </div>
   );
