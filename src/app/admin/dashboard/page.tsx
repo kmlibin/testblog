@@ -18,9 +18,6 @@ type Props = {
 //should be able to sort by date, category.
 
 async function page({ searchParams }: Props) {
-  // console.log(searchParams);
-  let blogPost: BlogPostWithId | null = null;
-  let blogPostError: string | null = null;
   let myPicks: BlogPostWithId[] | null = null;
   let myPicksError: string | null = null;
   let featuredPost: BlogPostWithId | null = null;
@@ -45,7 +42,7 @@ async function page({ searchParams }: Props) {
   }
 //get featured post
   const featured = await getFeatured();
-  // console.log(featured);
+  console.log(featured);
   if (featured.error) {
     featuredPostError = featured.error;
   } else {
