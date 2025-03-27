@@ -15,7 +15,7 @@ export default async function getFeatured(): Promise<SingleReturnType> {
     const postId = featuredSnapshot.data();
 
     if (postId) {
-      const blogPost = await getBlogPostById(postId.post[0], "false");
+      const blogPost = await getBlogPostById(postId.post, "false");
   
       return { data: blogPost.data, error: null };
     } else {
