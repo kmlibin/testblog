@@ -19,7 +19,8 @@ export interface CategoryWithId {
     url: string;
   };
   name: string;
-  posts: string[];
+  posts?: string[];
+  drafts?: string[]
 }
 
 export interface Category {
@@ -29,7 +30,8 @@ export interface Category {
     url: string;
   };
   name: string;
-  posts: string[];
+  posts?: string[];
+  drafts?: string[]
 }
 
 export interface BlogPost {
@@ -71,3 +73,13 @@ export interface BlogPostWithId {
   };
 }
 
+export interface NewCategory  {
+  color: string;
+  image: {
+    path: string;
+    url: string;
+  };
+  name: string;
+
+
+}
