@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore/lite";
 import { db, storage } from "../firebase/config";
 import { ref, deleteObject } from "firebase/storage";
-import { BlogPost } from "../types";
+import { BlogPost, BlogPostWithId } from "../types";
 import { revalidatePath } from "next/cache";
 import { getCategoryNameAndColor } from "../firebase/queries/sectionQueries";
 import { checkQuantityOfPicks } from "./myPicks";
@@ -227,66 +227,52 @@ export async function editPost(
     }
 
     //check and update featured collection
-
     const featuredRef = doc(db, "featured", "featuredPost");
-    const featuredSnapshot = await getDoc(featuredRef);
+const featuredSnapshot = await getDoc(featuredRef);
 
-    if (featuredSnapshot.exists()) {
-      const featuredData = featuredSnapshot.data();
-      const prevFeaturedId = featuredData?.post || [];
-    
-      // Log the current state of the featured post array
-      console.log("Current featured posts:", prevFeaturedId);
-    
-      // If it's a draft now, but wasn't before and was previously featured
-      if (draft && prevPost?.featured) {
-        console.log("Removing from featured: ", postId);
-        await updateDoc(featuredRef, {
-          post: arrayRemove(postId), // Remove from featured post array
-        });
-      }
-    
-      // If it's not a draft now, but was before and not featured
-      if (!draft && prevPost?.featured && !featured) {
-        console.log("Removing previously featured post: ", prevFeaturedId);
-        // Only remove if prevFeaturedId is a valid value
-        if (prevFeaturedId.length > 0) {
-          await updateDoc(featuredRef, {
-            post: arrayRemove(prevFeaturedId[0]), // Remove previous post
-          });
-        }
-      }
-    
-      // If current post is NOT a draft and it is now featured
-      if (!draft && featured) {
-        console.log("Adding to featured: ", postId);
-        // If it's not the same post that's already featured
-        if (postId !== prevFeaturedId[0]) {
-          console.log("Removing old featured post: ", prevFeaturedId[0]);
-          // Only remove if prevFeaturedId is a valid value
-          if (prevFeaturedId.length > 0) {
-            await updateDoc(featuredRef, {
-              post: arrayRemove(prevFeaturedId[0]), // Remove previous post
-            });
-          }
-          console.log("Adding new featured post: ", postId);
-          await updateDoc(featuredRef, {
-            post: arrayUnion(postId), // Add the current post
-          });
-        }
-      }
-    } else {
-      // If the featuredPost document doesn't exist, create it and add the current post to the array if it's featured
-      console.log("Featured post document does not exist. Creating a new featured post document.");
-    
-      // If the current post is featured, add it to the new document
-      if (featured) {
-        console.log("Adding current post to new featured post document: ", postId);
-        await setDoc(featuredRef, {
-          post: arrayUnion(postId),
-        });
-      }
+if (featuredSnapshot.exists()) {
+  const featuredData = featuredSnapshot.data();
+  const prevFeaturedId = featuredData?.post || null;
+  const prevFeaturedPostRef = prevFeaturedId ? doc(db, prevCollection, prevFeaturedId) : null;
+
+  
+
+  // where post is switched to a draft (it must be removed from featured)
+  if (draft) {
+    if (prevFeaturedId === postId) {
+      console.log("remove post from featured because it's now a draft: ", postId);
+      await updateDoc(featuredRef, { post: null });
     }
+  } 
+  //  where a post is switching from active to featured
+  else if (featured) {
+    if (postId !== prevFeaturedId) {
+      console.log("new featured post:", postId);
+
+      // remove previous featured post if it exists
+      if (prevFeaturedId) {
+        console.log("setting previous featured post to `featured: false`: ", prevFeaturedId);
+        await updateDoc(prevFeaturedPostRef!, { featured: false });
+      }
+
+      // Set the new featured post
+      await updateDoc(featuredRef, { post: postId });
+    }
+  }
+  // where a post was previously featured but is no longer marked as featured
+  else if (!featured && prevFeaturedId === postId) {
+    console.log("removing previously featured post because it's no longer featured:", postId);
+    await updateDoc(featuredRef, { post: null });
+  }
+} 
+// the featured document doesn't exist, create it and feature the post if applicable
+else {
+  console.log("Featured post document does not exist. Creating...");
+  if (featured) {
+    console.log("Setting new featured post: ", postId);
+    await setDoc(featuredRef, { post: postId });
+  }
+}
     //update my picks collection
     const myPicksRef = doc(db, "myPicks", "picks");
     const myPicksDocSnapshot = await getDoc(myPicksRef);
@@ -323,10 +309,6 @@ export async function editPost(
         };
 
         await updateDoc(myPicksRef, updatedPicks);
-
-        // if(!draft && !myPick) {
-        //   return
-        // }
       } 
     }
 
@@ -397,38 +379,20 @@ export const deletePost = async (
   id: string,
   imagePath: string[],
   categoryId: string,
-  draft: string,
+  post: BlogPost
 ) => {
+
+  const {draft, featured, myPick} = post
+  let draftStatus = draft === true ? "drafts" : "posts" 
+
   try {
-    //delete product from appropriate document in categories collection
-    //get the appropriate category document and a snapshot of the current state
-    const categoriesDocRef = doc(db, "categories", categoryId);
-    const categoriesDocSnapshot = await getDoc(categoriesDocRef);
-
-    //remove from category collection. if draft === "posts", remove it from posts. otherwise remove it from "drafts"
-    if (categoriesDocSnapshot.exists()) {
-      let updatedSectionData
-      if(draft === "posts") {
-         updatedSectionData = {
-        posts: arrayRemove(id),
-      };
-      } else {
-         updatedSectionData  = {
-          drafts: arrayRemove(id)
-         }
-      }
-     
-
-      await updateDoc(categoriesDocRef, updatedSectionData);
-    }
-
     //delete from appropriate collection
-    if(draft === "posts") {
+    if(draftStatus === "posts") {
       
     await deleteDoc(doc(db, "posts", id));
     }
 
-    if(draft === "drafts") {
+    if(draftStatus === "drafts") {
       await deleteDoc(doc(db, "drafts", id))
     }
 
@@ -448,7 +412,52 @@ export const deletePost = async (
       })
     );
 
+        //delete product from appropriate document in categories collection
+    //get the appropriate category document and a snapshot of the current state
+    const categoriesDocRef = doc(db, "categories", categoryId);
+    const categoriesDocSnapshot = await getDoc(categoriesDocRef);
+
+    //remove from category collection. if draft === "posts", remove it from posts. otherwise remove it from "drafts"
+    if (categoriesDocSnapshot.exists()) {
+      let updatedSectionData
+      if(draftStatus === "posts") {
+         updatedSectionData = {
+        posts: arrayRemove(id),
+      };
+      } else {
+         updatedSectionData  = {
+          drafts: arrayRemove(id)
+         }
+      }
+     
+
+      await updateDoc(categoriesDocRef, updatedSectionData);
+    }
+
+
     //need to delete from myPicks and featured, if those things are true. errors if could delete from one, but not another, etc.
+if(myPick) {
+  const myPicksDocRef = doc(db, "myPicks", "picks");
+  const myPicksDocSnapshot = await getDoc(myPicksDocRef);
+  if(myPicksDocSnapshot.exists()) {
+    let updatedPicks = {
+      posts: arrayRemove(id)
+    }
+
+    await updateDoc(myPicksDocRef, updatedPicks);
+  }
+}
+
+//remove from featured - maybe if there isn't any featured, i should get most recent post from db and add it?
+if(featured) {
+  const featuredRef = doc(db, "featured", "featuredPost");
+  const featuredDocSnapshot = await getDoc(featuredRef);
+  if(featuredDocSnapshot.exists()) {
+    await updateDoc(featuredRef, {
+      post: null, 
+    });
+  }
+}
 
 
   } catch (error: any) {
