@@ -60,15 +60,7 @@ const TableCard = ({ post }: Props) => {
         >
           <CiEdit />
         </Link>
-        {/* <button
-          data-tooltip="Delete Post"
-          type="button"
-          aria-label="delete post"
-          onClick={() => handleDelete(post.id)}
-          className={styles.singleIcon}
-        >
-          <RiDeleteBinLine />
-        </button> */}
+
         <DeletePost format="icon" post={post} draft={post.data.draft === true ? "drafts" : "posts"}/>
       </div>
     </div>
