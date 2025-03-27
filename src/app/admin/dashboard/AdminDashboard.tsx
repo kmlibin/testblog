@@ -11,6 +11,7 @@ import { getCategories } from "@/app/firebase/queries/sectionQueries";
 import { getPicks } from "@/app/firebase/queries/picksQueries";
 import getFeatured from "@/app/firebase/queries/featuredQueries";
 import TableCard from "./TableCard";
+import ManageCategories from "./ManageCategories";
 
 type AdminDashboardProps = {
   myPicks: BlogPostWithId[] | null;
@@ -60,7 +61,7 @@ const AdminDashboard = ({
     [searchParams]
   );
 
-  console.log(searchParams);
+  console.log("featuredPost", featuredPost, featuredPostError);
   useEffect(() => {
     const status = searchParams.get("status");
     const searchQueryCategory = searchParams.get("category");
@@ -111,7 +112,10 @@ const AdminDashboard = ({
     router.push(pathname + "?" + createQueryString("category", value));
   };
   return (
-    <div className={styles.dashboard}>
+
+    <div className={styles.container}>
+      <div className={styles.dashboardContainer}>
+      <div className={styles.dashboardTabs}>
       {/* active/draft tabs */}
       <div className={styles.tabs}>
         <button
@@ -171,7 +175,10 @@ const AdminDashboard = ({
           ))}
         </select>
       </div>
-
+      
+</div>
+<ManageCategories categories={categories}/>
+</div>
       {/* posts */}
       <div className={styles.dataContainer}>
       {featuredPostError && <div>{featuredPostError}</div>}
