@@ -51,7 +51,7 @@ const DeletePost = ({post, format, draft}: Props) => {
           productIdToDelete,
           imagePaths,
           sectionPath,
-          draft
+          post.data,
         );
         console.log(`error = ${error}`)
         if (error == false) {
