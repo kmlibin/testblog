@@ -1,0 +1,331 @@
+"use client";
+import React, { useState } from "react";
+import styles from "./managecategories.module.css";
+import { CategoryWithId, NewCategory } from "@/app/types";
+import { FaEdit, FaTrash, FaCheck } from "react-icons/fa";
+import { RiCloseLargeFill } from "react-icons/ri";
+import InputColor from "react-input-color";
+import CreateNewCategory from "./CreateNewCategory";
+import { uploadImage } from "@/app/utils/uploadImage";
+import { deleteObject, ref } from "firebase/storage";
+import { storage } from "@/app/firebase/config";
+import { editCategory } from "@/app/actions/categories";
+
+type Props = {
+  categories: CategoryWithId[] | null;
+};
+
+const ManageCategories = ({ categories: initialCategories }: Props) => {
+  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [newImage, setNewImage] = useState<any>(null);
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    color: "",
+    image: null,
+  });
+  const [categories, setCategories] = useState<CategoryWithId[]>(
+    initialCategories || []
+  );
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [color, setColor] = useState<any>({ hex: "#0000ff" });
+  const [categoryImages, setCategoryImages] = useState<{ [key: string]: any }>({}); 
+  const [categoryColors, setCategoryColors] = useState<{
+    [key: string]: string;
+  }>({});
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
+  const [editedCategory, setEditedCategory] = useState<CategoryWithId | null>(
+    null
+  );
+
+  const handleEditClick = (categoryId: string) => {
+    setEditingCategoryId(categoryId);
+    const category = categories.find((cat) => cat.id === categoryId);
+    setEditedCategory(category || null);
+    // Reset image for the new category being edited
+    setNewImage(categoryImages[categoryId] || null);
+    if (category) {
+      setColor({ hex: category.color });
+    }
+  };
+
+  const MAX_FILE_SIZE = 3 * 1024 * 1024;
+  const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
+
+  const handleNewFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("New file selected:", e.target.files?.[0]);
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    //checks file type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      alert("Invalid file type. Please upload a JPEG or PNG image.");
+      return;
+    }
+    //checks file size
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File is too large. Please upload an image smaller than 3MB.");
+    }
+
+    console.log("works");
+    setNewImage({
+      url: URL.createObjectURL(file),
+      file: file,
+    });
+  };
+
+  const handleInputChange = (
+    field: keyof CategoryWithId,
+    value: any
+  ) => {
+    setEditedCategory((prev) => {
+      if (prev) {
+        // Ensure the 'id' field is retained and other fields are updated
+        return {
+          ...prev, // Preserve other fields
+          [field]: value, // Update only the changed field
+        };
+      }
+      return prev; // If prev is null, return it as is
+    });
+  };
+
+  const handleColorChange = (color: any) => {
+  // Update only the color of the edited category
+  setEditedCategory((prev) => {
+    if (prev) {
+      return {
+        ...prev,
+        color: color.hex, // Update the color for the edited category
+      };
+    }
+    return prev;
+  });
+};
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handlePublishNewCategory = () => {
+    console.log("published");
+  };
+
+  const handlePublishChanges = async (e: any, category: any) => {
+    e.preventDefault();
+
+
+    try {
+      let newCoverUrl: { url: string; path: string } | undefined = undefined;
+      if (newImage) {
+        console.log("run new image")
+        // upload new image and get their URLs and paths
+      
+        newCoverUrl = await uploadImage(newImage.file);
+
+        if (newCoverUrl) {
+          const isFirebaseUrl =
+            editedCategory?.image?.url?.includes("firebase") ??
+            false;
+          if (isFirebaseUrl) {
+            const imagePath = editedCategory?.image?.path;
+            if (imagePath) {
+              const imageRef = ref(storage, imagePath);
+              deleteObject(imageRef).then(() => {
+                console.log("Deleted Google Storage photo");
+              });
+            }
+          }
+        }
+      }
+        //create object that now includes the urls
+        const newCat = {
+          id: editedCategory?.id,
+          color: editedCategory?.color,
+          image: newCoverUrl || null,
+          name: editedCategory?.name,
+        };
+
+        //call server action, editpost
+        const response = await editCategory(newCat);
+        //if successful
+        if (response?.error === false) {
+          const { message } = response;
+          console.log("response", response);
+          // setLoading(false);
+          // setSuccess(true);
+          // setModalMessage(message);
+          // setPostSlug(slug ? slug : "/");
+          // setReturnedDraft(draft || "");
+          // setShowModal(true);
+
+          //clear state values
+          // setTitle("");
+          // setContent("");
+          // setCoverImage(null);
+          // setAdditionalImages([]);
+          // setKeywords([]);
+          // setDraft(false);
+        }
+        //if unsuccessful
+        if (response?.error === true) {
+          console.log("error ")
+          const { message } = response;
+          // setLoading(false);
+          // setSuccess(false);
+          // setModalMessage(message);
+          // setShowModal(true);
+          console.log(message);
+        }
+      
+    } catch (error: any) {
+      console.log("error adding product");
+      // setLoading(false);
+      // setSuccess(false);
+      // setModalMessage(error.message);
+      // setShowModal(true);
+    }
+  };
+
+  // console.log(newImage);
+  console.log("edited Category", editedCategory);
+  //create new category
+  //save name, color, image
+
+  //edit color, DONE
+  //hook color up to state, save as hex value, also preview it. previous color needs to be in preview.
+
+  //edit image
+  //prev image needs to be shown, delete/upload to google storage
+
+  //edit name, DONE
+  //prev name needs shown, new name
+  return (
+    <div>
+      {/* Manage Categories Button */}
+      <button
+        className={styles.manageButton}
+        onClick={() => setIsModalOpen(true)}
+      >
+        Manage Categories
+      </button>
+
+      {/* Modal Overlay */}
+      {isModalOpen && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <button
+              className={styles.closeButton}
+              onClick={() => setIsModalOpen(false)}
+            >
+              <RiCloseLargeFill />
+            </button>
+            <h2>Manage Categories</h2>
+
+            {/* Create New Category Button */}
+            <button
+              className={styles.createCategory}
+              onClick={() => setIsCreatingNew(true)}
+            >
+              Create New Category
+            </button>
+
+            {/* Show the new category UI when button is clicked */}
+            {isCreatingNew && (
+              <CreateNewCategory
+                color={color}
+                setIsCreatingNew={setIsCreatingNew}
+                handleNewFile={handleNewFile}
+                setColor={setColor}
+              />
+            )}
+
+            {/* existing categories */}
+            {categories.map((category) => (
+              <div key={category.id} className={styles.categoryCard}>
+                {/* Image with upload button when editing */}
+                  <div className={styles.imageContainer}>
+                  <img
+                    src={
+                      newImage && editingCategoryId === category.id
+                        ? newImage.url
+                        : categoryImages[category.id]?.url || category.image.url
+                    }
+                    alt={category.name}
+                    className={styles.categoryImage}
+                  />
+                  {editingCategoryId === category.id && <input type="file" onChange={handleNewFile} />}
+                </div>
+                <div className={styles.categoryDetails}>
+                  {/* editable cat name */}
+                  <div className={styles.categoryName}>
+                    {editingCategoryId === category.id ? (
+                      <input
+                        type="text"
+                        className={styles.inputField}
+                        value={editedCategory?.name || ""}
+                        onChange={(e) =>
+                          handleInputChange("name", e.target.value)
+                        }
+                      />
+                    ) : (
+                      <h4>{category.name}</h4>
+                    )}
+                  </div>
+
+                  {/* color, shown only when editing */}
+                  <div className={styles.colorSection}>
+                    <p>Select Color</p>
+                    {editingCategoryId === category.id && (
+                      <InputColor
+                        initialValue={category.color}
+                        onChange={(color) => handleColorChange(color)} 
+                      />
+                    )}
+                    <div
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: "50%",
+                        backgroundColor:
+                        editedCategory?.id === category.id
+                          ? editedCategory.color
+                          : category.color, // Only show edited category's color
+                    }}
+                    />
+                  </div>
+
+                  {/* buttons */}
+                  <div className={styles.actionButtons}>
+                    {editingCategoryId === category.id ? (
+                      <span
+                        className={styles.icon}
+                        onClick={(e) => handlePublishChanges(e, category)}
+                      >
+                        <FaCheck title="Save Changes" />
+                      </span>
+                    ) : (
+                      <span
+                        className={styles.icon}
+                        onClick={() => handleEditClick(category.id)}
+                      >
+                        <FaEdit title="Edit" />
+                      </span>
+                    )}
+                    <span className={styles.icon}>
+                      <FaTrash title="Delete" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ManageCategories;
