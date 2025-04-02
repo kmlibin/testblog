@@ -11,7 +11,7 @@ import { getCategories } from "@/app/firebase/queries/sectionQueries";
 import { getPicks } from "@/app/firebase/queries/picksQueries";
 import getFeatured from "@/app/firebase/queries/featuredQueries";
 import TableCard from "./TableCard";
-import ManageCategories from "./ManageCategories";
+import ManageCategories from "./components/ManageCategories";
 
 type AdminDashboardProps = {
   myPicks: BlogPostWithId[] | null;
