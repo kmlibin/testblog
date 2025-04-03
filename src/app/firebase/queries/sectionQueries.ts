@@ -23,7 +23,7 @@ export async function getCategories(): Promise<CategoryResult> {
       const categories: CategoryWithId[] = collectionSnapshot.docs.map(
         (doc) => {
           const data = doc.data();
-          return { id: doc.id, name: data.name, color: data.color, image: data.image, posts: data.posts };
+          return { id: doc.id, name: data.name, color: data.color, image: data.image, posts: data.posts, drafts: data.drafts };
         }
       );
 
