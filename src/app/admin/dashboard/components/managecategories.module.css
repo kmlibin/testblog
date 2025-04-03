@@ -6,6 +6,23 @@
   
 }
 
+.infoContainer {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+}
+
+.buttonContainer {
+  width: 100%;
+  text-align: right;
+  margin-bottom: 1rem;
+}
+
+.exitButton {
+  width: max-content;
+  padding: .5rem;
+}
+
 
 .manageButton {
   padding: 0.5rem 1rem;
@@ -80,8 +97,9 @@ overflow: scroll;
 
 .categoryCard {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 2rem;
+position: relative;
   padding: 1rem;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -116,6 +134,7 @@ overflow: scroll;
 
 .categoryName {
   flex: 1;
+  text-transform: capitalize;
 }
 
 
@@ -155,4 +174,12 @@ height: auto;
 
 .icon:hover {
   color: #007bff;
+}
+
+.countContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
 }
