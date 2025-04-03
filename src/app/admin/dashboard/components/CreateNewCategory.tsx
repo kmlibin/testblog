@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import styles from "./managecategories.module.css";
 
 import { FaCheck } from "react-icons/fa";
@@ -7,37 +7,49 @@ import { RiCloseLargeFill, RiPlayReverseMiniFill } from "react-icons/ri";
 import InputColor from "react-input-color";
 import { uploadImage } from "@/app/utils/uploadImage";
 import { createCategory } from "@/app/actions/categories";
+import Modal from "@/components/modal/Modal";
+import { useRouter } from "next/navigation";
+import paths from "@/paths";
 
 type Props = {
   handleNewFile: any;
-
+  setIsModalOpen: any;
   setIsCreatingNew: any;
   newCategory: any;
   setNewCategory: any;
-
 };
 
 const CreateNewCategory = ({
   handleNewFile,
-
+  setIsModalOpen,
   setIsCreatingNew,
   newCategory,
   setNewCategory,
-
- 
 }: Props) => {
-console.log(newCategory)
+  const [modalMessage, setModalMessage] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const router = useRouter();
+
+  //close error/success modal
+  const closeModal = () => {
+    console.log("runs");
+    setShowModal(false);
+    setIsModalOpen(false);
+    if (success === true) {
+      router.push(paths.adminPage());
+    }
+  };
 
   const handlePublishNewCategory = async (e: any) => {
     e.preventDefault();
 
     try {
       let newCatUrl: { url: string; path: string } | undefined = undefined;
-    
-        console.log("run new image");
-        // upload new image and get url and path
-        newCatUrl = await uploadImage(newCategory.image.file);
 
+      console.log("run new image");
+      // upload new image and get url and path
+      newCatUrl = await uploadImage(newCategory.image.file);
 
       //create object that now includes the urls
       const newCat = {
@@ -53,23 +65,22 @@ console.log(newCategory)
         const { message } = response;
         console.log("response", response);
         // setLoading(false);
-        // setSuccess(true);
-        // setModalMessage(message);
-        // setShowModal(true);
+        setSuccess(true);
+        setModalMessage(message);
+        setShowModal(true);
 
         //clear state values
-        // setEditingCategoryId(null);
-        // setEditedCategory(null);
-        // setNewImage(null);
+        setNewCategory(null);
+    
       }
       //if unsuccessful
       if (response?.error === true) {
         console.log("error ");
         const { message } = response;
         // setLoading(false);
-        // setSuccess(false);
-        // setModalMessage(message);
-        // setShowModal(true);
+        setSuccess(false);
+        setModalMessage(message);
+        setShowModal(true);
         console.log(message);
       }
     } catch (error: any) {
@@ -100,7 +111,7 @@ console.log(newCategory)
             onChange={(e) =>
               setNewCategory((prev: any) => ({
                 ...prev,
-                name: e.target.value
+                name: e.target.value,
               }))
             }
           />
@@ -108,9 +119,8 @@ console.log(newCategory)
 
         <div className={styles.colorSection}>
           <div className={styles.colorPickerPlaceholder}>
-          
             <div className={styles.colorSection}>
-            <p>Select Color</p>
+              <p>Select Color</p>
               <InputColor
                 initialValue="#5e72e4"
                 onChange={(color) =>
@@ -135,14 +145,28 @@ console.log(newCategory)
         </div>
 
         <div className={styles.actionButtons}>
-          <span className={styles.icon} onClick={(e) => handlePublishNewCategory(e)}>
+          <span
+            className={styles.icon}
+            onClick={(e) => handlePublishNewCategory(e)}
+          >
             <FaCheck title="Publish New Category" />
           </span>
-          <span className={styles.icon} onClick={() => {setIsCreatingNew(false), setNewCategory(null)}}>
+          <span
+            className={styles.icon}
+            onClick={() => {
+              setIsCreatingNew(false), setNewCategory(null);
+            }}
+          >
             <RiCloseLargeFill title="close new category" />
           </span>
         </div>
       </div>
+      {/* success or error modal */}
+      <Modal show={showModal} onClose={closeModal}>
+        <div>
+          <p>{modalMessage}</p>
+        </div>
+      </Modal>
     </div>
   );
 };
