@@ -10,25 +10,35 @@ import { uploadImage } from "@/app/utils/uploadImage";
 import { deleteObject, ref } from "firebase/storage";
 import { storage } from "@/app/firebase/config";
 import { editCategory } from "@/app/actions/categories";
+import Modal from "@/components/modal/Modal";
 
 type Props = {
   categories: CategoryWithId[] | null;
 };
 
 const ManageCategories = ({ categories: initialCategories }: Props) => {
+  const [modalMessage, setModalMessage] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [newImage, setNewImage] = useState<any>(null);
+  const [newCatImage, setNewCatImage] = useState<any>(null);
   const [newCategory, setNewCategory] = useState({
     name: "",
     color: "",
-    image: null,
+    image: {
+      url: null,
+      file: null
+    }
   });
   const [categories, setCategories] = useState<CategoryWithId[]>(
     initialCategories || []
   );
+  const [showModal, setShowModal] = useState<boolean>(false);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [color, setColor] = useState<any>({ hex: "#0000ff" });
-  const [categoryImages, setCategoryImages] = useState<{ [key: string]: any }>({}); 
+  const [success, setSuccess] = useState<boolean>(false);
+  const [categoryImages, setCategoryImages] = useState<{ [key: string]: any }>(
+    {}
+  );
   const [categoryColors, setCategoryColors] = useState<{
     [key: string]: string;
   }>({});
@@ -38,6 +48,11 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
   const [editedCategory, setEditedCategory] = useState<CategoryWithId | null>(
     null
   );
+
+  const closeModal = () => {
+    console.log("runs");
+    setShowModal(false);
+  };
 
   const handleEditClick = (categoryId: string) => {
     setEditingCategoryId(categoryId);
@@ -53,7 +68,10 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
   const MAX_FILE_SIZE = 3 * 1024 * 1024;
   const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png"];
 
-  const handleNewFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewFile = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    cover: boolean
+  ) => {
     console.log("New file selected:", e.target.files?.[0]);
     e.preventDefault();
     e.stopPropagation();
@@ -71,16 +89,23 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
     }
 
     console.log("works");
-    setNewImage({
-      url: URL.createObjectURL(file),
-      file: file,
-    });
+    if (cover) {
+      setNewCategory((prev: any) => ({
+        ...prev,
+        image: {
+          url: URL.createObjectURL(file),
+        file: file,
+        }
+      }))
+    } else {
+      setNewImage({
+        url: URL.createObjectURL(file),
+        file: file,
+      });
+    }
   };
 
-  const handleInputChange = (
-    field: keyof CategoryWithId,
-    value: any
-  ) => {
+  const handleInputChange = (field: keyof CategoryWithId, value: any) => {
     setEditedCategory((prev) => {
       if (prev) {
         // Ensure the 'id' field is retained and other fields are updated
@@ -94,17 +119,17 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
   };
 
   const handleColorChange = (color: any) => {
-  // Update only the color of the edited category
-  setEditedCategory((prev) => {
-    if (prev) {
-      return {
-        ...prev,
-        color: color.hex, // Update the color for the edited category
-      };
-    }
-    return prev;
-  });
-};
+    // Update only the color of the edited category
+    setEditedCategory((prev) => {
+      if (prev) {
+        return {
+          ...prev,
+          color: color.hex, // Update the color for the edited category
+        };
+      }
+      return prev;
+    });
+  };
 
   const handleOpenModal = () => setIsModalOpen(true);
   const handleCloseModal = () => setIsModalOpen(false);
@@ -116,19 +141,17 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
   const handlePublishChanges = async (e: any, category: any) => {
     e.preventDefault();
 
-
     try {
       let newCoverUrl: { url: string; path: string } | undefined = undefined;
       if (newImage) {
-        console.log("run new image")
+        console.log("run new image");
         // upload new image and get their URLs and paths
-      
+
         newCoverUrl = await uploadImage(newImage.file);
 
         if (newCoverUrl) {
           const isFirebaseUrl =
-            editedCategory?.image?.url?.includes("firebase") ??
-            false;
+            editedCategory?.image?.url?.includes("firebase") ?? false;
           if (isFirebaseUrl) {
             const imagePath = editedCategory?.image?.path;
             if (imagePath) {
@@ -140,56 +163,49 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
           }
         }
       }
-        //create object that now includes the urls
-        const newCat = {
-          id: editedCategory?.id,
-          color: editedCategory?.color,
-          image: newCoverUrl || null,
-          name: editedCategory?.name,
-        };
+      //create object that now includes the urls
+      const newCat = {
+        id: editedCategory?.id,
+        color: editedCategory?.color,
+        image: newCoverUrl || null,
+        name: editedCategory?.name,
+      };
 
-        //call server action, editpost
-        const response = await editCategory(newCat);
-        //if successful
-        if (response?.error === false) {
-          const { message } = response;
-          console.log("response", response);
-          // setLoading(false);
-          // setSuccess(true);
-          // setModalMessage(message);
-          // setPostSlug(slug ? slug : "/");
-          // setReturnedDraft(draft || "");
-          // setShowModal(true);
+      //call server action, editpost
+      const response = await editCategory(newCat);
+      //if successful
+      if (response?.error === false) {
+        const { message } = response;
+        console.log("response", response);
+        // setLoading(false);
+        setSuccess(true);
+        setModalMessage(message);
+        setShowModal(true);
 
-          //clear state values
-          // setTitle("");
-          // setContent("");
-          // setCoverImage(null);
-          // setAdditionalImages([]);
-          // setKeywords([]);
-          // setDraft(false);
-        }
-        //if unsuccessful
-        if (response?.error === true) {
-          console.log("error ")
-          const { message } = response;
-          // setLoading(false);
-          // setSuccess(false);
-          // setModalMessage(message);
-          // setShowModal(true);
-          console.log(message);
-        }
-      
+        //clear state values
+        setEditingCategoryId(null);
+        setEditedCategory(null);
+        setNewImage(null);
+      }
+      //if unsuccessful
+      if (response?.error === true) {
+        console.log("error ");
+        const { message } = response;
+        // setLoading(false);
+        setSuccess(false);
+        setModalMessage(message);
+        setShowModal(true);
+        console.log(message);
+      }
     } catch (error: any) {
       console.log("error adding product");
       // setLoading(false);
-      // setSuccess(false);
-      // setModalMessage(error.message);
-      // setShowModal(true);
+      setSuccess(false);
+      setModalMessage(error.message);
+      setShowModal(true);
     }
   };
 
-  // console.log(newImage);
   console.log("edited Category", editedCategory);
   //create new category
   //save name, color, image
@@ -212,7 +228,7 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
         Manage Categories
       </button>
 
-      {/* Modal Overlay */}
+      {/* overlay */}
       {isModalOpen && (
         <div className={styles.modalOverlay}>
           <div className={styles.modalContent}>
@@ -224,7 +240,7 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
             </button>
             <h2>Manage Categories</h2>
 
-            {/* Create New Category Button */}
+            {/* new category button*/}
             <button
               className={styles.createCategory}
               onClick={() => setIsCreatingNew(true)}
@@ -232,21 +248,21 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
               Create New Category
             </button>
 
-            {/* Show the new category UI when button is clicked */}
+            {/*show the new category UI when button is clicked */}
             {isCreatingNew && (
               <CreateNewCategory
-                color={color}
                 setIsCreatingNew={setIsCreatingNew}
                 handleNewFile={handleNewFile}
-                setColor={setColor}
+                newCategory={newCategory}
+                setNewCategory={setNewCategory}
               />
             )}
 
             {/* existing categories */}
             {categories.map((category) => (
               <div key={category.id} className={styles.categoryCard}>
-                {/* Image with upload button when editing */}
-                  <div className={styles.imageContainer}>
+                {/* image with upload button when editing */}
+                <div className={styles.imageContainer}>
                   <img
                     src={
                       newImage && editingCategoryId === category.id
@@ -256,7 +272,12 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
                     alt={category.name}
                     className={styles.categoryImage}
                   />
-                  {editingCategoryId === category.id && <input type="file" onChange={handleNewFile} />}
+                  {editingCategoryId === category.id && (
+                    <input
+                      type="file"
+                      onChange={(e) => handleNewFile(e, false)}
+                    />
+                  )}
                 </div>
                 <div className={styles.categoryDetails}>
                   {/* editable cat name */}
@@ -281,7 +302,7 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
                     {editingCategoryId === category.id && (
                       <InputColor
                         initialValue={category.color}
-                        onChange={(color) => handleColorChange(color)} 
+                        onChange={(color) => handleColorChange(color)}
                       />
                     )}
                     <div
@@ -290,10 +311,10 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
                         height: 50,
                         borderRadius: "50%",
                         backgroundColor:
-                        editedCategory?.id === category.id
-                          ? editedCategory.color
-                          : category.color, // Only show edited category's color
-                    }}
+                          editedCategory?.id === category.id
+                            ? editedCategory.color
+                            : category.color, // Only show edited category's color
+                      }}
                     />
                   </div>
 
@@ -324,6 +345,13 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
           </div>
         </div>
       )}
+
+      {/* success or error modal */}
+      <Modal show={showModal} onClose={closeModal}>
+        <div>
+          <p>{modalMessage}</p>
+        </div>
+      </Modal>
     </div>
   );
 };
