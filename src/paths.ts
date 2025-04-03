@@ -16,6 +16,9 @@ const paths = {
   },
   viewCategoryPage(categoryName: string, category: string) {
     return `/category/${categoryName}?id=${category}`
+  },
+  adminPage() {
+    return `/admin/dashboard`
   }
 };
 
