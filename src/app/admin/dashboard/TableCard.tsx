@@ -7,10 +7,11 @@ import truncateHTMLText from "@/app/utils/truncateText";
 import { formatDate } from "@/app/utils/formatDate";
 import { MdOutlinePageview } from "react-icons/md";
 import { CiEdit } from "react-icons/ci";
-import { RiDeleteBinLine } from "react-icons/ri";
+import { GrFavorite } from "react-icons/gr";
 import Link from "next/link";
 import paths from "@/paths";
 import DeletePost from "@/components/deletePost/DeletePost";
+import { GoStarFill } from "react-icons/go";
 
 
 type Props = {
@@ -25,6 +26,8 @@ const TableCard = ({ post }: Props) => {
   const handleDelete = (postId: any) => {
     console.log("deleted");
   };
+
+  console.log(post)
   return (
     <div className={styles.container}>
       <div className={styles.category}>
@@ -40,6 +43,8 @@ const TableCard = ({ post }: Props) => {
           height={60}
           width={60}
         />
+        {post.data.myPick && <GrFavorite />}
+        {post.data.featured && <GoStarFill />}
       </div>
       <div className={styles.info}>
         <p>{truncateHTMLText(title, 8)}</p>
