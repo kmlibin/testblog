@@ -173,6 +173,8 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
         console.log("error ");
         const { message } = response;
         // setLoading(false);
+        setEditingCategoryId(null);
+        setEditedCategory(null);
         setSuccess(false);
         setModalMessage(message);
         setShowModal(true);
@@ -181,6 +183,8 @@ const ManageCategories = ({ categories: initialCategories }: Props) => {
     } catch (error: any) {
       console.log("error adding product");
       // setLoading(false);
+      setEditingCategoryId(null);
+      setEditedCategory(null);
       setSuccess(false);
       setModalMessage(error.message);
       setShowModal(true);
