@@ -129,12 +129,14 @@ export async function editCategory(newCat: any) {
   }
   const normalizedName = name.trim().toLowerCase();
   try {
-    // check if the category name already exists
+    // check if the category name already exists, but exclude the current id we are editing
     const categoryRef = collection(db, "categories");
     const queryResult = query(categoryRef, where("name", "==", normalizedName));
     const querySnapshot = await getDocs(queryResult);
 
-    if (!querySnapshot.empty) {
+    const existingCategory = querySnapshot.docs.find(doc => doc.id !== id);
+
+    if (existingCategory) {
       return {
         error: true,
         message: "A category with this name already exists.",
