@@ -1,21 +1,40 @@
 "use client";
 import React, { useState } from "react";
+//styles
 import styles from "./managecategories.module.css";
-
+//icons and libraries
 import { FaCheck } from "react-icons/fa";
-import { RiCloseLargeFill, RiPlayReverseMiniFill } from "react-icons/ri";
+import { RiCloseLargeFill } from "react-icons/ri";
 import InputColor from "react-input-color";
+//utils
 import { uploadImage } from "@/app/utils/uploadImage";
+//actions
 import { createCategory } from "@/app/actions/categories";
+//components
 import Modal from "@/components/modal/Modal";
+//navigation
 import { useRouter } from "next/navigation";
 import paths from "@/paths";
+//types
+import { ImageFile } from "@/app/types";
+
+type EditedCategory = {
+  name: string;
+  color: string;
+  image: {
+    url: null | string;
+    file: null | ImageFile;
+  };
+};
 
 type Props = {
-  handleNewFile: any;
-  setIsModalOpen: any;
-  setIsCreatingNew: any;
-  newCategory: any;
+  handleNewFile: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    cover: boolean
+  ) => void;
+  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsCreatingNew: React.Dispatch<React.SetStateAction<boolean>>;
+  newCategory: EditedCategory | null | undefined;
   setNewCategory: any;
 };
 
@@ -26,9 +45,9 @@ const CreateNewCategory = ({
   newCategory,
   setNewCategory,
 }: Props) => {
-  const [modalMessage, setModalMessage] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [modalMessage, setModalMessage] = useState<string>("");
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [success, setSuccess] = useState<boolean>(false);
   const router = useRouter();
 
   //close error/success modal
@@ -41,7 +60,7 @@ const CreateNewCategory = ({
     }
   };
 
-  const handlePublishNewCategory = async (e: any) => {
+  const handlePublishNewCategory = async (e: React.MouseEvent<HTMLSpanElement, MouseEvent>) => {
     e.preventDefault();
 
     try {
@@ -49,13 +68,13 @@ const CreateNewCategory = ({
 
       console.log("run new image");
       // upload new image and get url and path
-      newCatUrl = await uploadImage(newCategory.image.file);
+      newCatUrl = await uploadImage(newCategory?.image.file);
 
       //create object that now includes the urls
       const newCat = {
-        color: newCategory.color,
+        color: newCategory?.color,
         image: newCatUrl,
-        name: newCategory.name,
+        name: newCategory?.name,
       };
 
       //call server action, editpost
@@ -71,7 +90,6 @@ const CreateNewCategory = ({
 
         //clear state values
         setNewCategory(null);
-    
       }
       //if unsuccessful
       if (response?.error === true) {
@@ -95,7 +113,7 @@ const CreateNewCategory = ({
     <div className={styles.newCategoryCard}>
       <div className={styles.imageContainer}>
         <img
-          src={newCategory?.image?.file ? newCategory.image.url : "/p1.jpeg"}
+          src={newCategory?.image?.url ?? "/p1.jpeg"}
           alt="photo for category"
           className={styles.categoryImage}
         />
@@ -107,9 +125,9 @@ const CreateNewCategory = ({
             type="text"
             placeholder="Category Name"
             className={styles.inputField}
-            value={newCategory.name}
+            value={newCategory?.name}
             onChange={(e) =>
-              setNewCategory((prev: any) => ({
+              setNewCategory((prev: EditedCategory) => ({
                 ...prev,
                 name: e.target.value,
               }))
@@ -137,7 +155,7 @@ const CreateNewCategory = ({
                   height: 50,
                   marginTop: 10,
                   borderRadius: "50%",
-                  backgroundColor: newCategory?.color || null,
+                  backgroundColor: newCategory?.color || "#fff",
                 }}
               />
             </div>
