@@ -23,11 +23,6 @@ const TableCard = ({ post }: Props) => {
     post.data;
   let draftStatus = draft === true ? "true" : "false";
 
-  const handleDelete = (postId: any) => {
-    console.log("deleted");
-  };
-
-  console.log(post)
   return (
     <div className={styles.container}>
       <div className={styles.category}>
